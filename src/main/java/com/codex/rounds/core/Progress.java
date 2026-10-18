@@ -13,6 +13,7 @@ public final class Progress
 	private final Map<Spot, Long> composted = new EnumMap<>(Spot.class);
 	private final Map<Spot, Long> paid = new EnumMap<>(Spot.class);
 	private boolean suppliesDone;
+	private boolean leprechaunDone;
 	private long startedAt;
 
 	public static String key(Task t)
@@ -80,6 +81,16 @@ public final class Progress
 		this.suppliesDone = true;
 	}
 
+	public boolean isLeprechaunDone()
+	{
+		return leprechaunDone;
+	}
+
+	public void leprechaunDone()
+	{
+		this.leprechaunDone = true;
+	}
+
 	public long getStartedAt()
 	{
 		return startedAt;
@@ -92,6 +103,7 @@ public final class Progress
 		composted.clear();
 		paid.clear();
 		suppliesDone = false;
+		leprechaunDone = false;
 		startedAt = now;
 	}
 

@@ -74,7 +74,8 @@ public final class Travel
 		{
 			Way first = best(from, place.getVia(), ability);
 			int local = walkSeconds(place.getVia().getAnchor(), place.getLocalPoint()) + 12;
-			return new Way(first.place, first.leg, first.walk, first.seconds + local);
+			int measured = first.leg == null ? 0 : ability.pace(TravelTimer.key(place, first.leg));
+			return new Way(first.place, first.leg, first.walk, measured > 0 ? measured : first.seconds + local);
 		}
 		Way best = null;
 		if (from != null && from.sameMap(place.getAnchor()) && from.distance(place.getAnchor()) <= WALK_LIMIT)
@@ -87,7 +88,8 @@ public final class Travel
 			{
 				continue;
 			}
-			int s = leg.overheadSeconds() + walkSeconds(leg.getLanding(), place.getAnchor());
+			int measured = ability.pace(TravelTimer.key(place, leg));
+			int s = measured > 0 ? measured : leg.overheadSeconds() + walkSeconds(leg.getLanding(), place.getAnchor());
 			if (best == null || s < best.seconds)
 			{
 				best = new Way(place, leg, false, s);

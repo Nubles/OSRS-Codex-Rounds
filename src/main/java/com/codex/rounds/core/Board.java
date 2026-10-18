@@ -145,6 +145,87 @@ public final class Board
 			.orElse(null);
 	}
 
+	/** A wait worth making: how long, how many more chores it adds, and which groups they are. */
+	public static final class Forecast
+	{
+		private final long waitSeconds;
+		private final int more;
+		private final List<String> groups;
+
+		Forecast(long waitSeconds, int more, List<String> groups)
+		{
+			this.waitSeconds = waitSeconds;
+			this.more = more;
+			this.groups = groups;
+		}
+
+		public long getWaitSeconds()
+		{
+			return waitSeconds;
+		}
+
+		public int getMore()
+		{
+			return more;
+		}
+
+		public List<String> getGroups()
+		{
+			return groups;
+		}
+	}
+
+	/** How far ahead a wait is worth suggesting. */
+	static final long FORECAST_HORIZON = 45 * 60;
+
+	/**
+	 * Whether waiting a little brings enough chores in to be worth it: the moment within the horizon that adds the
+	 * most chores for each minute waited, when it adds at least two. Minutes are padded by ten so a wait of one
+	 * minute for one chore does not beat a wait of fifteen for six.
+	 *
+	 * @param after only chores ready later than this count, so ones already in the round are not counted twice
+	 */
+	public Forecast forecast(long after)
+	{
+		List<Entry> coming = new ArrayList<>();
+		for (Entry e : entries)
+		{
+			if (e.status == Status.GROWING && e.readyAt > Math.max(now, after) && e.readyAt <= now + FORECAST_HORIZON)
+			{
+				coming.add(e);
+			}
+		}
+		coming.sort(Comparator.comparingLong(Entry::getReadyAt));
+		Forecast best = null;
+		double bestRate = 0;
+		for (int i = 0; i < coming.size(); i++)
+		{
+			// Several chores often come ready on the same tick; take them all.
+			if (i + 1 < coming.size() && coming.get(i + 1).readyAt == coming.get(i).readyAt)
+			{
+				continue;
+			}
+			int more = i + 1;
+			long wait = coming.get(i).readyAt - now;
+			double rate = more / (wait / 60.0 + 10);
+			if (more >= 2 && rate > bestRate)
+			{
+				List<String> groups = new ArrayList<>();
+				for (Entry e : coming.subList(0, more))
+				{
+					String g = e.spot != null ? e.spot.getGroup().getLabel().toLowerCase() : "dailies";
+					if (!groups.contains(g))
+					{
+						groups.add(g);
+					}
+				}
+				best = new Forecast(wait, more, groups);
+				bestRate = rate;
+			}
+		}
+		return best;
+	}
+
 	/**
 	 * Builds the board.
 	 *

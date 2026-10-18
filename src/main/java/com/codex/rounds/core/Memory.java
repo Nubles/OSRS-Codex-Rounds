@@ -17,6 +17,10 @@ public final class Memory
 	public Map<Integer, Integer> bank = new HashMap<>();
 	public Map<Integer, Integer> carried = new HashMap<>();
 	public long bankTime;
+	/** Measured teleport legs: key to average seconds and how many laps it is drawn from. */
+	public Map<String, Pace> paces = new HashMap<>();
+	/** Tools and compost with the tool leprechaun, as last read. */
+	public Map<Integer, Integer> stored = new HashMap<>();
 
 	public Integer kingdomApproval;
 	public Integer kingdomCoffer;
@@ -187,8 +191,49 @@ public final class Memory
 			.fairyRings(fairyRings)
 			.bankKnown(bankTime > 0)
 			.items(bank)
-			.items(carried);
+			.items(carried)
+			.stored(stored)
+			.paces(paceMap());
 		return b.build();
+	}
+
+	/** A leg's running average, weighted toward recent laps so it follows the player getting quicker. */
+	public static final class Pace
+	{
+		public double seconds;
+		public int laps;
+	}
+
+	/** Laps it takes before a measured leg replaces the estimate. */
+	static final int PACE_LAPS = 2;
+	private static final int PACE_WINDOW = 5;
+
+	public void lap(String key, int seconds)
+	{
+		if (paces == null)
+		{
+			paces = new HashMap<>();
+		}
+		Pace p = paces.computeIfAbsent(key, k -> new Pace());
+		int n = Math.min(p.laps, PACE_WINDOW - 1);
+		p.seconds = (p.seconds * n + seconds) / (n + 1);
+		p.laps++;
+	}
+
+	Map<String, Integer> paceMap()
+	{
+		Map<String, Integer> out = new HashMap<>();
+		if (paces != null)
+		{
+			paces.forEach((k, p) ->
+			{
+				if (p != null && p.laps >= PACE_LAPS)
+				{
+					out.put(k, (int) Math.round(p.seconds));
+				}
+			});
+		}
+		return out;
 	}
 
 	public void record(RoundRecord r)

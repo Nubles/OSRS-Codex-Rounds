@@ -1,6 +1,7 @@
 package com.codex.rounds;
 
 import com.codex.rounds.core.Ability;
+import com.codex.rounds.core.BankTab;
 import com.codex.rounds.core.Board;
 import com.codex.rounds.core.Daily;
 import com.codex.rounds.core.DailyState;
@@ -8,6 +9,7 @@ import com.codex.rounds.core.Format;
 import com.codex.rounds.core.Growth;
 import com.codex.rounds.core.Guide;
 import com.codex.rounds.core.Kingdom;
+import com.codex.rounds.core.Leprechaun;
 import com.codex.rounds.core.Memory;
 import com.codex.rounds.core.Planner;
 import com.codex.rounds.core.Point;
@@ -19,6 +21,7 @@ import com.codex.rounds.core.Settings;
 import com.codex.rounds.core.Spot;
 import com.codex.rounds.core.Status;
 import com.codex.rounds.core.Step;
+import com.codex.rounds.core.TravelTimer;
 import com.codex.rounds.core.Stop;
 import com.codex.rounds.core.Task;
 import com.codex.rounds.core.Teleports;
@@ -71,6 +74,7 @@ import net.runelite.api.events.ChatMessage;
 import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.GameTick;
 import net.runelite.api.events.ItemContainerChanged;
+import net.runelite.api.events.WidgetLoaded;
 import net.runelite.api.gameval.InterfaceID;
 import net.runelite.api.gameval.InventoryID;
 import net.runelite.api.gameval.VarPlayerID;
@@ -83,12 +87,19 @@ import net.runelite.client.chat.ChatMessageBuilder;
 import net.runelite.client.chat.ChatMessageManager;
 import net.runelite.client.chat.QueuedMessage;
 import net.runelite.client.config.ConfigManager;
+import net.runelite.client.config.RuneLiteConfig;
 import net.runelite.client.eventbus.Subscribe;
 import net.runelite.client.events.ConfigChanged;
 import net.runelite.client.events.RuneScapeProfileChanged;
 import net.runelite.client.game.ItemManager;
 import net.runelite.client.plugins.Plugin;
+import net.runelite.client.plugins.PluginDependency;
 import net.runelite.client.plugins.PluginDescriptor;
+import net.runelite.client.plugins.banktags.BankTagsPlugin;
+import net.runelite.client.plugins.banktags.BankTagsService;
+import net.runelite.client.plugins.banktags.TagManager;
+import net.runelite.client.plugins.banktags.tabs.Layout;
+import net.runelite.client.plugins.banktags.tabs.LayoutManager;
 import net.runelite.client.ui.ClientToolbar;
 import net.runelite.client.ui.NavigationButton;
 import net.runelite.client.ui.overlay.OverlayManager;
@@ -103,6 +114,7 @@ import org.slf4j.LoggerFactory;
 	description = "Your bird houses, seaweed, special trees and patches, diary dailies and Kingdom of Miscellania in one guided round",
 	tags = {"farming", "birdhouse", "seaweed", "hardwood", "calquat", "spirit tree", "daily", "miscellania", "kingdom", "route", "codex"}
 )
+@PluginDependency(BankTagsPlugin.class)
 public class CodexRoundsPlugin extends Plugin
 {
 	private static final Logger log = LoggerFactory.getLogger(CodexRoundsPlugin.class);
@@ -114,6 +126,8 @@ public class CodexRoundsPlugin extends Plugin
 	private static final int QUEST_TICKS = 100;
 	private static final int PUBLISH_TICKS = 10;
 	private static final int SCAN_RADIUS = 10;
+	/** The bank tab holding the round's pull list. */
+	static final String BANK_TAG = "codex rounds";
 
 	private static final Pattern COMPOST = Pattern.compile(
 		"(You treat the .+ with (ultra|super|)compost\\.)|(The .+ has been treated with (ultra|super|)compost.*)"
@@ -156,6 +170,15 @@ public class CodexRoundsPlugin extends Plugin
 	private CodexRoundsConfig config;
 
 	@Inject
+	private BankTagsService bankTags;
+
+	@Inject
+	private TagManager tagManager;
+
+	@Inject
+	private LayoutManager layoutManager;
+
+	@Inject
 	private TargetOverlay targetOverlay;
 
 	@Inject
@@ -163,6 +186,7 @@ public class CodexRoundsPlugin extends Plugin
 
 	private final StepPlaque plaque = new StepPlaque();
 	private final Progress progress = new Progress();
+	private final TravelTimer timer = new TravelTimer();
 
 	private RoundsPanel panel;
 	private NavigationButton navButton;
@@ -175,6 +199,9 @@ public class CodexRoundsPlugin extends Plugin
 	private Route route = Route.EMPTY;
 	private Step step = Step.IDLE;
 	private Map<Integer, Integer> carried = Collections.emptyMap();
+	private volatile Set<Integer> tabItems = Collections.emptySet();
+	private boolean tabOpened;
+	private boolean tabWanted;
 	private boolean dirty;
 	private boolean unsaved;
 	private boolean replan = true;
@@ -210,6 +237,7 @@ public class CodexRoundsPlugin extends Plugin
 		overlayManager.add(plaque);
 		overlayManager.add(targetOverlay);
 		overlayManager.add(itemHighlight);
+		tagManager.registerTag(BANK_TAG, id -> tabItems.contains(id));
 		settings = readSettings();
 		clientThread.invokeLater(() ->
 		{
@@ -231,16 +259,39 @@ public class CodexRoundsPlugin extends Plugin
 		clientToolbar.removeNavigation(navButton);
 		clientThread.invokeLater(() ->
 		{
+			if (BANK_TAG.equals(bankTags.getActiveTag()))
+			{
+				bankTags.closeBankTag();
+			}
+			tagManager.unregisterTag(BANK_TAG);
+			layoutManager.removeLayout(BANK_TAG);
 			save();
 			clearGuidance();
 			memory = null;
 			profile = null;
 			progress.stop();
+			timer.reset();
 		});
 		panel = null;
 	}
 
 	// ---- Events ----
+
+	@Subscribe
+	public void onWidgetLoaded(WidgetLoaded event)
+	{
+		if (event.getGroupId() != InterfaceID.BANKMAIN)
+		{
+			return;
+		}
+		tabOpened = false;
+		// Opening the bank mid-way through gathering supplies goes straight to the round's tab.
+		if (tabWanted || config.bankTab() && progress.isStarted() && step.getKind() == Step.Kind.SUPPLIES && step.getTarget() == null)
+		{
+			tabWanted = false;
+			clientThread.invokeLater(this::openBankTab);
+		}
+	}
 
 	@Subscribe
 	public void onGameStateChanged(GameStateChanged event)
@@ -262,6 +313,7 @@ public class CodexRoundsPlugin extends Plugin
 	{
 		save();
 		progress.stop();
+		timer.reset();
 		loadProfile();
 		replan = true;
 		refresh(true);
@@ -447,6 +499,14 @@ public class CodexRoundsPlugin extends Plugin
 			memory.crafting = crafting;
 			memory.magic = magic;
 			memory.spellbook = book;
+			dirty = true;
+			unsaved = true;
+		}
+
+		Map<Integer, Integer> stored = Leprechaun.read(vars);
+		if (!stored.equals(memory.stored))
+		{
+			memory.stored = stored;
 			dirty = true;
 			unsaved = true;
 		}
@@ -668,6 +728,12 @@ public class CodexRoundsPlugin extends Plugin
 			{
 				progress.suppliesDone();
 			}
+			TravelTimer.Lap lap = timer.update(next, route, here(), ability, System.currentTimeMillis());
+			if (lap != null)
+			{
+				memory.lap(lap.getKey(), lap.getSeconds());
+				unsaved = true;
+			}
 			if (next.getKind() == Step.Kind.IDLE && next.getTotal() > 0 && next.getDone() >= next.getTotal())
 			{
 				finishRound(now);
@@ -688,6 +754,56 @@ public class CodexRoundsPlugin extends Plugin
 		return Point.of(wp.getX(), wp.getY(), wp.getPlane());
 	}
 
+	/** Lays the pull list out as a bank tab and opens it; only while the bank is open. */
+	private void openBankTab()
+	{
+		Widget bank = client.getWidget(InterfaceID.Bankmain.UNIVERSE);
+		if (bank == null || bank.isHidden() || route.isEmpty() || tabOpened)
+		{
+			return;
+		}
+		tabOpened = true;
+		// The tab is drawn by RuneLite's Bank Tags plugin, which can be switched off.
+		if ("false".equals(configManager.getConfiguration(RuneLiteConfig.GROUP_NAME, "banktagsplugin")))
+		{
+			chat("turn on RuneLite's Bank Tags plugin to see the round as a bank tab.");
+			return;
+		}
+		Map<Integer, Integer> held = memory == null || memory.bank == null ? Collections.emptyMap() : memory.bank;
+		tabItems = BankTab.items(route.getPulls());
+		layoutManager.saveLayout(new Layout(BANK_TAG, BankTab.layout(route.getPulls(), held)));
+		bankTags.openBankTag(BANK_TAG, 0);
+	}
+
+	/** "Wait 14 min and 5 more join: giant seaweed and bird houses." */
+	private String forecastText(long now)
+	{
+		if (board == null)
+		{
+			return null;
+		}
+		Board.Forecast f = board.forecast(now + settings.getLookaheadMinutes() * 60L);
+		if (f == null)
+		{
+			return null;
+		}
+		List<String> g = f.getGroups();
+		String what = g.size() == 1 ? g.get(0) : String.join(", ", g.subList(0, g.size() - 1)) + " and " + g.get(g.size() - 1);
+		return (route.isEmpty() ? "Wait " + Format.duration(f.getWaitSeconds()) + " and " + f.getMore() + " come ready: "
+			: "Wait " + Format.duration(f.getWaitSeconds()) + " and " + f.getMore() + " more join: ") + what + ".";
+	}
+
+	private void chat(String text)
+	{
+		String msg = new ChatMessageBuilder()
+			.append(ChatColorType.HIGHLIGHT)
+			.append("Codex Rounds: ")
+			.append(ChatColorType.NORMAL)
+			.append(text)
+			.build();
+		chatMessageManager.queue(QueuedMessage.builder().type(ChatMessageType.CONSOLE).runeLiteFormattedMessage(msg).build());
+	}
+
 	private void finishRound(long now)
 	{
 		int seconds = (int) (now - progress.getStartedAt());
@@ -695,6 +811,7 @@ public class CodexRoundsPlugin extends Plugin
 		memory.record(new Memory.RoundRecord(now, seconds, chores, route.getStops().size()));
 		unsaved = true;
 		progress.stop();
+		timer.reset();
 		replan = true;
 		if (config.chatSummary())
 		{
@@ -966,7 +1083,10 @@ public class CodexRoundsPlugin extends Plugin
 		}
 		Map<Integer, Integer> bank = memory == null || memory.bank == null ? Collections.emptyMap() : new HashMap<>(memory.bank);
 		View view = new View(loggedIn, known, board, route, step, progress.isStarted(), progress.getStartedAt(), now,
-			memory != null && memory.bankTime > 0, new HashMap<>(carried), bank, last);
+			memory != null && memory.bankTime > 0, new HashMap<>(carried), bank, last,
+			memory == null || memory.stored == null ? Collections.emptyMap() : new HashMap<>(memory.stored),
+			!route.isEmpty() && Leprechaun.PLACES.contains(route.getStops().get(0).getPlace()),
+			forecastText(now));
 		Progress snapshot = progress;
 		Route r = route;
 		Map<Spot, Reading> live = memory == null ? Collections.emptyMap() : readings(now);
@@ -1120,6 +1240,7 @@ public class CodexRoundsPlugin extends Plugin
 			clientThread.invokeLater(() ->
 			{
 				progress.start(Instant.now().getEpochSecond());
+				timer.reset();
 				replan = true;
 				refresh(true);
 			});
@@ -1131,6 +1252,7 @@ public class CodexRoundsPlugin extends Plugin
 			clientThread.invokeLater(() ->
 			{
 				progress.stop();
+				timer.reset();
 				replan = true;
 				refresh(true);
 			});
@@ -1145,11 +1267,34 @@ public class CodexRoundsPlugin extends Plugin
 				{
 					progress.skip(step.getTask());
 				}
+				else if (step.getKind() == Step.Kind.SUPPLIES && step.getTarget() != null)
+				{
+					progress.leprechaunDone();
+				}
 				else if (step.getKind() == Step.Kind.SUPPLIES)
 				{
 					progress.suppliesDone();
 				}
 				refresh(true);
+			});
+		}
+
+		@Override
+		public void bankTab()
+		{
+			clientThread.invokeLater(() ->
+			{
+				tabOpened = false;
+				Widget bank = client.getWidget(InterfaceID.Bankmain.UNIVERSE);
+				if (bank != null && !bank.isHidden())
+				{
+					openBankTab();
+				}
+				else
+				{
+					tabWanted = true;
+					chat("your round's bank tab opens the next time you open your bank.");
+				}
 			});
 		}
 

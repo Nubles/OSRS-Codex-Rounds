@@ -572,4 +572,16 @@ public interface CodexRoundsConfig extends Config
 	{
 		return new Color(246, 214, 144, 230);
 	}
+
+	@ConfigItem(
+		keyName = "bankTab",
+		name = "Round bank tab",
+		description = "Open a bank tab with exactly what the round needs, a row for each kind, when you bank for a round",
+		section = HIGHLIGHTS,
+		position = 5
+	)
+	default boolean bankTab()
+	{
+		return true;
+	}
 }

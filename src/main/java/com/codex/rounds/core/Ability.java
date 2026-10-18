@@ -8,6 +8,8 @@ import java.util.Map;
 public final class Ability
 {
 	private final Map<Integer, Integer> owned;
+	private final Map<Integer, Integer> stored;
+	private final Map<String, Integer> paces;
 	private final boolean bankKnown;
 	private final int farming;
 	private final int hunter;
@@ -19,6 +21,8 @@ public final class Ability
 	private Ability(Builder b)
 	{
 		this.owned = Collections.unmodifiableMap(new HashMap<>(b.owned));
+		this.stored = Collections.unmodifiableMap(new HashMap<>(b.stored));
+		this.paces = Collections.unmodifiableMap(new HashMap<>(b.paces));
 		this.bankKnown = b.bankKnown;
 		this.farming = b.farming;
 		this.hunter = b.hunter;
@@ -48,6 +52,23 @@ public final class Ability
 			n += owned.getOrDefault(id, 0);
 		}
 		return n;
+	}
+
+	/** How many of any of these items the tool leprechaun holds (already part of {@link #count}). */
+	public int stored(int... ids)
+	{
+		int n = 0;
+		for (int id : ids)
+		{
+			n += stored.getOrDefault(id, 0);
+		}
+		return n;
+	}
+
+	/** This player's measured seconds for a teleport leg (see {@link TravelTimer}), or 0 when not yet known. */
+	public int pace(String key)
+	{
+		return paces.getOrDefault(key, 0);
 	}
 
 	/** Whether the account owns one; when the bank was never seen, assume it might. */
@@ -115,6 +136,8 @@ public final class Ability
 	public static final class Builder
 	{
 		private final Map<Integer, Integer> owned = new HashMap<>();
+		private final Map<Integer, Integer> stored = new HashMap<>();
+		private final Map<String, Integer> paces = new HashMap<>();
 		private boolean bankKnown;
 		private int farming = 1;
 		private int hunter = 1;
@@ -137,6 +160,32 @@ public final class Ability
 			if (items != null)
 			{
 				items.forEach(this::item);
+			}
+			return this;
+		}
+
+		/** Tools and compost with the tool leprechaun; they count as owned too. */
+		public Builder stored(Map<Integer, Integer> items)
+		{
+			if (items != null)
+			{
+				items.forEach((id, qty) ->
+				{
+					if (qty > 0)
+					{
+						stored.merge(id, qty, Integer::sum);
+						item(id, qty);
+					}
+				});
+			}
+			return this;
+		}
+
+		public Builder paces(Map<String, Integer> paces)
+		{
+			if (paces != null)
+			{
+				this.paces.putAll(paces);
 			}
 			return this;
 		}

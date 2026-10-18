@@ -152,7 +152,7 @@ public final class Guide
 		Stop stop = route.getStops().get(current);
 		if (done == 0 && current == 0 && !progress.isSuppliesDone() && !stop.getPlace().contains(w.player))
 		{
-			List<Need> missing = missing(route.getPulls(), w);
+			List<Need> missing = missing(route, w);
 			if (!missing.isEmpty())
 			{
 				List<Integer> ids = new ArrayList<>();
@@ -174,6 +174,27 @@ public final class Guide
 		if (!place.contains(w.player))
 		{
 			return travel(stop, place, w, current, done, total);
+		}
+
+		if (Leprechaun.PLACES.contains(place) && !progress.isLeprechaunDone())
+		{
+			List<Need> take = fromLeprechaun(route.getPulls(), w);
+			if (!take.isEmpty())
+			{
+				List<Integer> ids = new ArrayList<>();
+				StringBuilder b = new StringBuilder();
+				for (Need n : take)
+				{
+					ids.add(n.getItemId());
+					if (b.length() > 0)
+					{
+						b.append(", ");
+					}
+					b.append(n.getQuantity() > 1 ? Format.number(n.getQuantity()) + " x " : "").append(n.getLabel().toLowerCase());
+				}
+				return new Step(Step.Kind.SUPPLIES, "Take tools from the leprechaun", "Stored with him: " + b,
+					Step.Target.npc(place.getAnchor(), Leprechaun.NPCS), ids, null, null, current, done, total);
+			}
 		}
 
 		Task task = nearest(stop, w, progress, settings, since);
@@ -447,16 +468,37 @@ public final class Guide
 	}
 
 	/** Required lines of the pull list the player isn't carrying enough of. */
-	public static List<Need> missing(List<Need> pulls, World w)
+	/** What still has to come from the bank: stored tools are left out when the first stop has a leprechaun. */
+	public static List<Need> missing(Route route, World w)
 	{
+		boolean leprechaunFirst = !route.getStops().isEmpty() && Leprechaun.PLACES.contains(route.getStops().get(0).getPlace());
 		List<Need> out = new ArrayList<>();
-		for (Need n : pulls)
+		for (Need n : route.getPulls())
 		{
 			if (n.isOptional())
 			{
 				continue;
 			}
-			if (w.carrying(n.getItems()) < n.getQuantity())
+			int have = w.carrying(n.getItems());
+			if (leprechaunFirst && Leprechaun.holds(n))
+			{
+				have += w.ability.stored(n.getItems());
+			}
+			if (have < n.getQuantity())
+			{
+				out.add(n);
+			}
+		}
+		return out;
+	}
+
+	/** Tools and compost the round needs that are with the leprechaun rather than in the pack. */
+	static List<Need> fromLeprechaun(List<Need> pulls, World w)
+	{
+		List<Need> out = new ArrayList<>();
+		for (Need n : pulls)
+		{
+			if (Leprechaun.holds(n) && w.carrying(n.getItems()) < n.getQuantity() && w.ability.stored(n.getItems()) > 0)
 			{
 				out.add(n);
 			}

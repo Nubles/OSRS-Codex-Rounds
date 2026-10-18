@@ -10,4 +10,7 @@ public interface Actions
 	void skip();
 
 	void replan();
+
+	/** Lay the pull list out as a bank tab, now if the bank is open or the next time it opens. */
+	void bankTab();
 }

@@ -3,6 +3,7 @@ package com.codex.rounds.ui;
 import com.codex.rounds.core.Board;
 import com.codex.rounds.core.Format;
 import com.codex.rounds.core.Kingdom;
+import com.codex.rounds.core.Leprechaun;
 import com.codex.rounds.core.Need;
 import com.codex.rounds.core.Route;
 import com.codex.rounds.core.Spot;
@@ -189,6 +190,14 @@ public class RoundsPanel extends PluginPanel
 				}
 				list.add(pullRow(n));
 			}
+			if (!route.getPulls().isEmpty())
+			{
+				list.space(1);
+				JPanel bar = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+				bar.setOpaque(false);
+				bar.add(new CodexButton("Lay it out in my bank", false, actions::bankTab));
+				list.add(bar);
+			}
 		}
 		if (view.lastRound != null)
 		{
@@ -224,6 +233,10 @@ public class RoundsPanel extends PluginPanel
 		}
 		body.add(Ui.wrapped(title, Theme.title(), Theme.GOLD_BRIGHT, width));
 		body.add(Ui.wrapped(detail, Theme.small(), Theme.TEXT, width));
+		if (!view.running && view.forecast != null)
+		{
+			body.add(Ui.wrapped(view.forecast, Theme.small(), Theme.GREEN, width));
+		}
 		if (view.running && !step.getItems().isEmpty())
 		{
 			body.add(iconStrip(step.getItems()));
@@ -300,6 +313,11 @@ public class RoundsPanel extends PluginPanel
 		if (carried >= n.getQuantity())
 		{
 			badge = "Packed";
+			color = Theme.GREEN;
+		}
+		else if (Leprechaun.holds(n) && view.leprechaunFirst && carried + view.stored(n.getItems()) >= n.getQuantity())
+		{
+			badge = "Leprechaun";
 			color = Theme.GREEN;
 		}
 		else if (carried + banked >= n.getQuantity())

@@ -3,6 +3,7 @@ package com.codex.rounds.core;
 import com.codex.rounds.core.farming.Action;
 import com.codex.rounds.core.farming.Produce;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -309,5 +310,137 @@ public class CoreTest
 		Step next = Guide.next(route, onIsland, progress, s);
 		assertEquals(Spot.BIRDHOUSE_MEADOW_S, next.getTarget().getSpot());
 		assertEquals(1, next.getDone());
+	}
+
+	@Test
+	public void readsTheLeprechaunsStore()
+	{
+		Map<Integer, Integer> bits = new HashMap<>();
+		bits.put(VarbitID.FARMING_TOOLS_SPADE, 1);
+		bits.put(VarbitID.FARMING_TOOLS_SECATEURS, 1);
+		bits.put(VarbitID.FARMING_TOOLS_FAIRYSECATEURS, 1);
+		bits.put(VarbitID.FARMING_TOOLS_SUPERCOMPOST, 44);
+		bits.put(VarbitID.FARMING_TOOLS_EXTRASUPERCOMPOST, 1);
+		Map<Integer, Integer> stored = Leprechaun.read(vars(bits, new HashMap<>()));
+		assertEquals(Integer.valueOf(1), stored.get(ItemID.SPADE));
+		assertEquals(Integer.valueOf(1), stored.get(ItemID.FAIRY_ENCHANTED_SECATEURS));
+		assertFalse(stored.containsKey(ItemID.SECATEURS));
+		assertEquals(Integer.valueOf(300), stored.get(ItemID.BUCKET_SUPERCOMPOST));
+	}
+
+	@Test
+	public void takesStoredToolsFromTheLeprechaun()
+	{
+		Settings s = onlyFossil();
+		Map<Integer, Integer> store = new HashMap<>();
+		store.put(ItemID.DIBBER, 1);
+		store.put(ItemID.SPADE, 1);
+		Ability a = Ability.builder().levels(99, 99, 99, 99).bankKnown(true).fairyRings(true)
+			.item(11194, 1).item(ItemID.BIRDHOUSE_REDWOOD, 20).item(ItemID.BARLEY_SEED, 200).item(ItemID.SEAWEED_SEED, 50)
+			.item(ItemID.BUCKET_ULTRACOMPOST, 50).stored(store).build();
+		Map<Spot, Seen> seen = fossilDue();
+		Board b = Board.build(seen, Collections.emptyList(), null, s, a, T0, Growth.Offset.NONE);
+		Route route = Planner.plan(b, Collections.emptyList(), s, a, Point.of(3164, 3486), T0);
+		assertEquals(Place.FOSSIL_ISLAND, route.getStops().get(0).getPlace());
+
+		Map<Integer, Integer> carried = new HashMap<>();
+		for (Need n : route.getPulls())
+		{
+			if (a.stored(n.getItems()) == 0)
+			{
+				carried.put(n.getItemId(), n.getQuantity());
+			}
+		}
+		Map<Spot, Reading> live = new EnumMap<>(Spot.class);
+		for (Spot sp : Spot.values())
+		{
+			live.put(sp, Growth.read(sp, seen.get(sp), T0, Growth.Offset.NONE));
+		}
+		Guide.World atBank = new Guide.World(Point.of(3164, 3486), live, new EnumMap<>(Daily.class), null, carried, a, T0);
+		Progress progress = new Progress();
+		progress.start(T0);
+		// The dibber waits with the leprechaun, so the bank has nothing more to give.
+		assertTrue(Guide.missing(route, atBank).isEmpty());
+		assertEquals(Step.Kind.TRAVEL, Guide.next(route, atBank, progress, s).getKind());
+
+		Guide.World onIsland = new Guide.World(Point.of(3678, 3880), live, new EnumMap<>(Daily.class), null, carried, a, T0 + 30);
+		Step take = Guide.next(route, onIsland, progress, s);
+		assertEquals("Take tools from the leprechaun", take.getTitle());
+		assertTrue(take.getItems().contains(ItemID.DIBBER));
+
+		carried.put(ItemID.DIBBER, 1);
+		carried.put(ItemID.SPADE, 1);
+		assertEquals(Step.Kind.TASK, Guide.next(route, onIsland, progress, s).getKind());
+	}
+
+	@Test
+	public void laysThePullListOutInRows()
+	{
+		List<Need> pulls = Arrays.asList(
+			new Need(Need.Kind.TELEPORT, "Digsite pendant", 1, "Fossil Island", false, 11194, 11193),
+			new Need(Need.Kind.TOOL, "Spade", 1, "planting", false, ItemID.SPADE),
+			new Need(Need.Kind.TOOL, "Seed dibber", 1, "seeds", false, ItemID.DIBBER));
+		Map<Integer, Integer> bank = new HashMap<>();
+		bank.put(11193, 1);
+		int[] l = BankTab.layout(pulls, bank);
+		assertEquals(11193, l[0]);
+		assertEquals(-1, l[1]);
+		assertEquals(ItemID.SPADE, l[8]);
+		assertEquals(ItemID.DIBBER, l[9]);
+		assertEquals(10, l.length);
+		assertTrue(BankTab.items(pulls).contains(11194));
+	}
+
+	@Test
+	public void learnsHowLongALegTakes()
+	{
+		Settings s = onlyFossil();
+		Ability a = rich();
+		Map<Spot, Seen> seen = fossilDue();
+		Board b = Board.build(seen, Collections.emptyList(), null, s, a, T0, Growth.Offset.NONE);
+		Point bank = Point.of(3164, 3486);
+		Route route = Planner.plan(b, Collections.emptyList(), s, a, bank, T0);
+		Step travel = new Step(Step.Kind.TRAVEL, "Digsite pendant", "", null, Collections.emptyList(), null, null, 0, 0, 6);
+
+		TravelTimer timer = new TravelTimer();
+		assertNull(timer.update(travel, route, bank, a, 1_000));
+		TravelTimer.Lap lap = timer.update(travel, route, Point.of(3678, 3880), a, 21_000);
+		assertNotNull(lap);
+		assertEquals(20, lap.getSeconds());
+
+		Memory m = new Memory();
+		m.lap(lap.getKey(), 20);
+		assertEquals(0, m.ability().pace(lap.getKey()));
+		m.lap(lap.getKey(), 30);
+		assertEquals(25, m.ability().pace(lap.getKey()));
+		Ability learned = Ability.builder().items(Collections.singletonMap(11194, 1)).paces(m.paceMap()).build();
+		assertEquals(25, Travel.best(bank, Place.FOSSIL_ISLAND, learned).getSeconds());
+
+		// A detour far beyond the estimate is not counted.
+		timer.update(travel, route, bank, a, 0);
+		assertNull(timer.update(travel, route, Point.of(3678, 3880), a, 600_000));
+	}
+
+	@Test
+	public void forecastsAWorthwhileWait()
+	{
+		Settings s = onlyFossil();
+		Ability a = rich();
+		Map<Spot, Seen> seen = new EnumMap<>(Spot.class);
+		// Bird houses seeded 40 minutes ago fill in ten; seaweed planted long ago is ready now.
+		long seeded = T0 - 40 * 60;
+		seen.put(Spot.BIRDHOUSE_VALLEY_NE, new Seen(27, seeded));
+		seen.put(Spot.BIRDHOUSE_VALLEY_SW, new Seen(27, seeded));
+		seen.put(Spot.BIRDHOUSE_MEADOW_N, new Seen(27, seeded));
+		seen.put(Spot.BIRDHOUSE_MEADOW_S, new Seen(27, seeded));
+		seen.put(Spot.SEAWEED_N, new Seen(10, T0 - 6 * 3600));
+		Board b = Board.build(seen, Collections.emptyList(), null, s, a, T0, Growth.Offset.NONE);
+		Board.Forecast f = b.forecast(T0);
+		assertNotNull(f);
+		assertEquals(4, f.getMore());
+		assertTrue(f.getWaitSeconds() > 9 * 60 && f.getWaitSeconds() <= 10 * 60);
+		assertEquals(Collections.singletonList("bird houses"), f.getGroups());
+		// Already inside the round's lookahead: nothing more to wait for.
+		assertNull(b.forecast(T0 + 15 * 60));
 	}
 }
