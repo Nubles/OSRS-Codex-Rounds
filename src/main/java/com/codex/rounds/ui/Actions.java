@@ -5,6 +5,9 @@ public interface Actions
 {
 	void start();
 
+	/** Start a round of just the bird houses and seaweed. */
+	void startQuick();
+
 	void stop();
 
 	void skip();

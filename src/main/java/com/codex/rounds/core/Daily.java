@@ -22,7 +22,10 @@ public enum Daily
 		NpcID.LOVAKENGJ_THIRUS_POST_DIARY, NpcID.LOVAKENGJ_THIRUS, NpcID.LOVAKENGJ_THIRUS_PRE_DIARY),
 	BERT("Bert's sand", Place.YANILLE, ItemID.BUCKET_SAND, "Ask Bert for your sand", NpcID.HANDSAND_BERT_2OPS, NpcID.HANDSAND_BERT_1OP, NpcID.HANDSAND_BERT),
 	HERB_BOXES("Herb boxes", Place.NIGHTMARE_ZONE, ItemID.NZONE_HERBBOX, "Buy herb boxes from Dominic Onion", NpcID.NZONE_HOST),
-	LUNDAIL("Lundail's runes", Place.MAGE_ARENA, ItemID.DEATHRUNE, "Claim runes from Lundail", NpcID.MAGEARENA_RUNESHOP);
+	LUNDAIL("Lundail's runes", Place.MAGE_ARENA, ItemID.DEATHRUNE, "Claim runes from Lundail", NpcID.MAGEARENA_RUNESHOP),
+	/** Not daily, but a chore of the same shape: a talk at a place, ready again whenever a contract is done. */
+	CONTRACT("Farming contract", Place.FARMING_GUILD, ItemID.SEEDBOX, "Talk to Guildmaster Jane about your contract",
+		NpcID.FARMING_GUILD_MASTER, NpcID.FARMING_GUILD_MASTER_1OP, NpcID.FARMING_GUILD_MASTER_2OP);
 
 	public static final int ZAFF_PRICE = 7_000;
 	public static final int HERB_BOX_POINTS = 9_500;
@@ -85,6 +88,12 @@ public enum Daily
 		return false;
 	}
 
+	/** Whether it comes back at the daily reset; a contract only comes back when it is done. */
+	public boolean resetsDaily()
+	{
+		return this != CONTRACT;
+	}
+
 	/** Whether the account has earned this daily at all. */
 	public boolean unlocked(Vars v)
 	{
@@ -108,6 +117,8 @@ public enum Daily
 				return v.varbit(VarbitID.IRONMAN) == 0 && v.varp(VarPlayerID.NZONE_REWARDPOINTS) >= HERB_BOX_POINTS;
 			case LUNDAIL:
 				return done(v, VarbitID.WILDERNESS_DIARY_EASY_COMPLETE);
+			case CONTRACT:
+				return Contract.known(v);
 			default:
 				return false;
 		}
@@ -140,6 +151,8 @@ public enum Daily
 				return v.varbit(VarbitID.NZONE_HERBBOXES_PURCHASED) < HERB_BOX_MAX;
 			case LUNDAIL:
 				return v.varbit(VarbitID.LUNDAIL_LAST_CLAIMED) == 0;
+			case CONTRACT:
+				return Contract.complete(v) || Contract.type(v) == 0;
 			default:
 				return false;
 		}
@@ -209,6 +222,18 @@ public enum Daily
 				return n + " herb boxes for " + Format.number((long) n * HERB_BOX_POINTS) + " points";
 			case LUNDAIL:
 				return "A random handful of runes";
+			case CONTRACT:
+				int type = Contract.type(v);
+				if (Contract.complete(v))
+				{
+					return "Done: hand it in for a seed pack and take the next";
+				}
+				if (type == 0 || Contract.cropName(type) == null)
+				{
+					return "No contract running: take one";
+				}
+				return Contract.cropName(type) + " in the guild's " + Contract.patch(type)
+					+ (Contract.produce(type) != null ? ", planted on your round" : ", on your farm run");
 			default:
 				return "";
 		}

@@ -17,6 +17,8 @@ public final class Memory
 	public Map<Integer, Integer> bank = new HashMap<>();
 	public Map<Integer, Integer> carried = new HashMap<>();
 	public long bankTime;
+	/** The running farming contract's type varbit, 0 when none or when done. */
+	public int contractType;
 	/** Measured teleport legs: key to average seconds and how many laps it is drawn from. */
 	public Map<String, Pace> paces = new HashMap<>();
 	/** Tools and compost with the tool leprechaun, as last read. */
@@ -162,7 +164,7 @@ public final class Memory
 				}
 			}
 			DailyState st = new DailyState(d, snap.unlocked, snap.claimable, snap.reward == null ? "" : snap.reward, need);
-			boolean reset = now / 86400 > snap.seenAt / 86400;
+			boolean reset = d.resetsDaily() && now / 86400 > snap.seenAt / 86400;
 			out.add(reset ? st.afterReset() : st);
 		}
 		return out;

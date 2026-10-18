@@ -18,6 +18,9 @@ public final class Supplies
 	static final int[] COMPOST_ULTRA = {ItemID.BUCKET_ULTRACOMPOST, ItemID.BOTTOMLESS_COMPOST_BUCKET_FILLED};
 	static final int[] COMPOST_SUPER = {ItemID.BUCKET_SUPERCOMPOST, ItemID.BUCKET_ULTRACOMPOST, ItemID.BOTTOMLESS_COMPOST_BUCKET_FILLED};
 	static final int[] SECATEURS = {ItemID.FAIRY_ENCHANTED_SECATEURS, ItemID.SECATEURS};
+	static final int[] AXES = {ItemID.DRAGON_AXE, ItemID.CRYSTAL_AXE, ItemID.INFERNAL_AXE, ItemID.TRAILBLAZER_AXE, ItemID.RUNE_AXE,
+		ItemID.ADAMANT_AXE, ItemID.MITHRIL_AXE, ItemID.BLACK_AXE, ItemID.STEEL_AXE, ItemID.IRON_AXE, ItemID.BRONZE_AXE,
+		ItemID.CRYSTAL_AXE_INACTIVE, ItemID.INFERNAL_AXE_EMPTY};
 
 	private Supplies()
 	{
@@ -33,6 +36,7 @@ public final class Supplies
 		boolean gloves = false;
 		boolean cure = false;
 		boolean prune = false;
+		boolean axe = false;
 		int coins = 0;
 		List<String> coinWhy = new ArrayList<>();
 		int compost = 0;
@@ -118,6 +122,12 @@ public final class Supplies
 						{
 							gloves = true;
 						}
+						boolean chops = a == Action.CHOP || (a == Action.CHECK_HEALTH || a == Action.HARVEST)
+							&& (spot.getKind() == PatchKind.CELASTRUS || spot.getKind() == PatchKind.CRYSTAL_TREE);
+						if (chops && t.getPlant() != null && !(Planner.isTree(spot) && spot.getGardener() >= 0))
+						{
+							axe = true;
+						}
 						if (t.isGardenerClear())
 						{
 							coins += GARDENER_CLEAR_FEE;
@@ -160,6 +170,10 @@ public final class Supplies
 				add(lines, new Need(Need.Kind.TOOL, "Seed dibber", 1, "seeds and spores", false, ItemID.DIBBER), false);
 			}
 			add(lines, new Need(Need.Kind.TOOL, "Magic secateurs", 1, "bigger harvests", !prune, SECATEURS), false);
+			if (axe)
+			{
+				add(lines, new Need(Need.Kind.TOOL, "Axe (any)", 1, "chopping before replanting", false, AXES), false);
+			}
 			if (gloves)
 			{
 				add(lines, new Need(Need.Kind.TOOL, "Gloves (any pair)", 1, "nightshade", false, ItemID.LEATHER_GLOVES), false);

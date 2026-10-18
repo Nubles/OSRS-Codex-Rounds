@@ -377,6 +377,18 @@ public interface CodexRoundsConfig extends Config
 	}
 
 	@ConfigItem(
+		keyName = "contract",
+		name = "Farming contracts",
+		description = "Hand in Guildmaster Jane's contracts and take new ones, and plant the contract crop in the guild patches Rounds tends",
+		section = DAILIES,
+		position = 9
+	)
+	default boolean contract()
+	{
+		return true;
+	}
+
+	@ConfigItem(
 		keyName = "compost",
 		name = "Compost",
 		description = "What to treat every new planting with",

@@ -37,13 +37,13 @@ public final class Planner
 			{
 				case SPOT:
 					Reading r = e.getReading();
-					if (r.dueWithin(now, lookahead) && (r.getStatus() != Status.UNSEEN || settings.isIncludeUnseen()))
+					if (settings.wants(e.getSpot()) && r.dueWithin(now, lookahead) && (r.getStatus() != Status.UNSEEN || settings.isIncludeUnseen()))
 					{
 						t = spotTask(e.getSpot(), r, settings, ability);
 					}
 					break;
 				case DAILY:
-					if (e.getStatus() == Status.READY)
+					if (e.getStatus() == Status.READY && settings.wants(e.getDaily()))
 					{
 						DailyState ds = dailyStates.get(e.getDaily());
 						t = new Task(Board.Type.DAILY, null, e.getDaily(), null, null, false, false,
@@ -51,7 +51,7 @@ public final class Planner
 					}
 					break;
 				case KINGDOM:
-					if (e.getStatus() == Status.READY)
+					if (e.getStatus() == Status.READY && settings.isKingdom())
 					{
 						t = kingdomTask(board.getKingdom(), settings);
 					}
@@ -239,6 +239,13 @@ public final class Planner
 		}
 
 		Produce plant = leavesEmpty(spot, r, settings) ? choosePlant(spot.getKind(), settings, ability) : null;
+		Produce contract = settings.getContract();
+		if (plant != null && contract != null && spot.getPlace() == Place.FARMING_GUILD && contract.getKind() == spot.getKind()
+			&& contract.getLevel() <= ability.getFarming())
+		{
+			// Guildmaster Jane's contract wins over the usual pick for the guild's own patch.
+			plant = contract;
+		}
 		boolean compost = plant != null && settings.getCompost() != Settings.Compost.NONE && spot.getKind() != PatchKind.HESPORI
 			&& spot.getKind() != PatchKind.CRYSTAL_TREE;
 		boolean protect = plant != null && settings.isProtect() && plant.isProtectable() && spot.getGardener() >= 0;

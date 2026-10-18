@@ -1,6 +1,7 @@
 package com.codex.rounds.core;
 
 import com.codex.rounds.core.farming.Action;
+import com.codex.rounds.core.farming.PatchKind;
 import com.codex.rounds.core.farming.Produce;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -442,5 +443,106 @@ public class CoreTest
 		assertEquals(Collections.singletonList("bird houses"), f.getGroups());
 		// Already inside the round's lookahead: nothing more to wait for.
 		assertNull(b.forecast(T0 + 15 * 60));
+	}
+
+	@Test
+	public void handlesFarmingContracts()
+	{
+		Map<Integer, Integer> bits = new HashMap<>();
+		Vars none = vars(bits, new HashMap<>());
+		assertFalse(Daily.CONTRACT.unlocked(none));
+
+		bits.put(VarbitID.FARMGUILD_CONTRACT_TYPE, 6);
+		Vars ivy = vars(bits, new HashMap<>());
+		assertTrue(Daily.CONTRACT.unlocked(ivy));
+		assertFalse(Daily.CONTRACT.claimable(ivy));
+		assertEquals("Poison ivy in the guild's bush patch, planted on your round", Daily.CONTRACT.reward(ivy));
+
+		bits.put(VarbitID.FARMGUILD_CONTRACT_COMPLETE, 1);
+		assertTrue(Daily.CONTRACT.claimable(vars(bits, new HashMap<>())));
+
+		bits.put(VarbitID.FARMGUILD_CONTRACT_TYPE, 24);
+		bits.put(VarbitID.FARMGUILD_CONTRACT_COMPLETE, 0);
+		assertEquals("Ranarr in the guild's herb patch, on your farm run", Daily.CONTRACT.reward(vars(bits, new HashMap<>())));
+		assertNull(Contract.produce(24));
+
+		// A running contract is not cleared by the daily reset.
+		Memory m = new Memory();
+		m.snapDaily(DailyState.of(Daily.CONTRACT, ivy), T0 - 2 * 86400);
+		assertFalse(m.dailyStates(T0).get(0).isClaimable());
+	}
+
+	@Test
+	public void plantsTheContractCropInTheGuild()
+	{
+		Settings s = Settings.defaults().contract(Produce.WHITEBERRIES);
+		Ability a = rich();
+		Reading empty = Growth.read(Spot.BUSH_GUILD, new Seen(3, T0 - 60), T0, Growth.Offset.NONE);
+		assertEquals(Produce.WHITEBERRIES, Planner.spotTask(Spot.BUSH_GUILD, empty, s, a).getPlant());
+		Reading champions = Growth.read(Spot.BUSH_CHAMPIONS, new Seen(3, T0 - 60), T0, Growth.Offset.NONE);
+		assertEquals(Produce.POISON_IVY, Planner.spotTask(Spot.BUSH_CHAMPIONS, champions, s, a).getPlant());
+	}
+
+	static int val(PatchKind k, Produce p, Action a)
+	{
+		for (int v = 0; v < 256; v++)
+		{
+			com.codex.rounds.core.farming.PatchState st = k.forVarbitValue(v);
+			if (st != null && st.getProduce() == p && st.getAction() == a)
+			{
+				return v;
+			}
+		}
+		throw new IllegalStateException(k + " " + p + " " + a);
+	}
+
+	@Test
+	public void quickLoopKeepsToBirdHousesAndSeaweed()
+	{
+		Settings s = Settings.defaults().includeUnseen(false);
+		Ability a = rich();
+		Map<Spot, Seen> seen = fossilDue();
+		seen.put(Spot.HARDWOOD_FOSSIL_E, new Seen(val(PatchKind.HARDWOOD_TREE, Produce.MAHOGANY, Action.CHECK_HEALTH), T0 - 20 * 3600));
+		Board b = Board.build(seen, Collections.emptyList(), null, s, a, T0, Growth.Offset.NONE);
+		Route full = Planner.plan(b, Collections.emptyList(), s, a, Point.of(3164, 3486), T0);
+		Route quick = Planner.plan(b, Collections.emptyList(), s.quickLoop(), a, Point.of(3164, 3486), T0);
+		assertEquals(7, full.taskCount());
+		assertEquals(6, quick.taskCount());
+	}
+
+	@Test
+	public void growingIsOnlyDoneAfterAHarvestOrReplant()
+	{
+		Settings s = onlyFossil();
+		Ability a = rich();
+		Map<Spot, Seen> seen = fossilDue();
+		Board b = Board.build(seen, Collections.emptyList(), null, s, a, T0, Growth.Offset.NONE);
+		Route route = Planner.plan(b, Collections.emptyList(), s, a, Point.of(3164, 3486), T0);
+		Progress progress = new Progress();
+		progress.start(T0);
+		Task weed = null;
+		for (Stop st : route.getStops())
+		{
+			for (Task t : st.getTasks())
+			{
+				if (t.getSpot() == Spot.SEAWEED_N)
+				{
+					weed = t;
+				}
+			}
+		}
+		assertNotNull(weed);
+		Map<Spot, Reading> live = new EnumMap<>(Spot.class);
+		// The prediction ran ahead: a fresh reading shows the seaweed one stage short.
+		live.put(Spot.SEAWEED_N, Growth.read(Spot.SEAWEED_N, new Seen(7, T0 + 60), T0 + 60, Growth.Offset.NONE));
+		Guide.World w = new Guide.World(Point.of(3732, 10280), live, new EnumMap<>(Daily.class), null, new HashMap<>(), a, T0 + 60);
+		assertEquals(Status.GROWING, live.get(Spot.SEAWEED_N).getStatus());
+		assertFalse(Guide.isDone(weed, w, progress, s, T0));
+
+		// Seen ready, then growing again: picked and replanted.
+		live.put(Spot.SEAWEED_N, Growth.read(Spot.SEAWEED_N, new Seen(10, T0 + 600), T0 + 600, Growth.Offset.NONE));
+		Guide.next(route, w, progress, s);
+		live.put(Spot.SEAWEED_N, Growth.read(Spot.SEAWEED_N, new Seen(5, T0 + 700), T0 + 700, Growth.Offset.NONE));
+		assertTrue(Guide.isDone(weed, w, progress, s, T0));
 	}
 }

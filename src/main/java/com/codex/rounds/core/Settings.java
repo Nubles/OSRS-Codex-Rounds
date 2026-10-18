@@ -43,6 +43,7 @@ public final class Settings
 	private boolean keepSpiritTrees = true;
 	private boolean includeUnseen = true;
 	private int lookaheadMinutes = 10;
+	private Produce contract;
 
 	public static Settings defaults()
 	{
@@ -57,6 +58,31 @@ public final class Settings
 	public boolean wants(Daily daily)
 	{
 		return dailies.contains(daily);
+	}
+
+	/** The groups a quick loop covers: the Fossil Island chores that come round every hour. */
+	public static final Set<Spot.Group> QUICK = EnumSet.of(Spot.Group.BIRDHOUSES, Spot.Group.SEAWEED);
+
+	/** A copy for a quick loop: only bird houses and seaweed, no dailies or kingdom, the rest as set. */
+	public Settings quickLoop()
+	{
+		Settings q = new Settings();
+		q.groups.retainAll(QUICK);
+		q.groups.retainAll(groups);
+		q.off.addAll(off);
+		q.dailies.clear();
+		q.crops.putAll(crops);
+		q.kingdom = false;
+		q.approvalTarget = approvalTarget;
+		q.cofferTarget = cofferTarget;
+		q.topUpSlack = topUpSlack;
+		q.compost = compost;
+		q.protect = protect;
+		q.keepSpiritTrees = keepSpiritTrees;
+		q.includeUnseen = includeUnseen;
+		q.lookaheadMinutes = lookaheadMinutes;
+		q.contract = contract;
+		return q;
 	}
 
 	public Settings group(Spot.Group g, boolean on)
@@ -110,6 +136,18 @@ public final class Settings
 			crops.put(kind, produce);
 		}
 		return this;
+	}
+
+	/** The running farming contract's crop when it grows in a guild patch Rounds tends, or null. */
+	public Settings contract(Produce produce)
+	{
+		this.contract = produce;
+		return this;
+	}
+
+	public Produce getContract()
+	{
+		return contract;
 	}
 
 	public Produce getCrop(PatchKind kind)

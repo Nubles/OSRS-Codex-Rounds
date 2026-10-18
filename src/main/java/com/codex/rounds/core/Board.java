@@ -331,6 +331,8 @@ public final class Board
 				return "Needs 9,500 Nightmare Zone points (not for ironmen)";
 			case LUNDAIL:
 				return "Needs the easy Wilderness diary";
+			case CONTRACT:
+				return "Talk to Guildmaster Jane in the Farming Guild (45 Farming)";
 			default:
 				return "Locked";
 		}

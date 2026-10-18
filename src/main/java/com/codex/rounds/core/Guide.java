@@ -93,10 +93,9 @@ public final class Guide
 			// Nothing was meant to go in: an empty patch is as far as this round takes it.
 			return t.getPlant() == null && (r.getAction() == Action.PLANT || r.getAction() == Action.RAKE);
 		}
-		if (planned.getStatus() == Status.GROWING && planned.getSeen() != null && r.getSeen() != null
-			&& planned.getSeen().getValue() == r.getSeen().getValue() && r.getStatus() == Status.GROWING)
+		if (r.getStatus() == Status.GROWING && !progress.wasPlanted(spot) && !progress.wasSeenReady(spot))
 		{
-			// Came early for something nearly ready: it still needs doing.
+			// Growing without being seen ready or replanted this round: it came early, or the prediction ran ahead.
 			return false;
 		}
 		if (progress.wasPlanted(spot))
@@ -120,6 +119,7 @@ public final class Guide
 			return Step.IDLE;
 		}
 		long since = progress.isStarted() ? progress.getStartedAt() : route.getBuiltAt();
+		noteReady(route, w, progress, since);
 		int total = route.taskCount();
 		int done = 0;
 		int current = -1;
@@ -199,6 +199,23 @@ public final class Guide
 
 		Task task = nearest(stop, w, progress, settings, since);
 		return taskStep(task, w, progress, current, done, total);
+	}
+
+	/** Marks spots a fresh reading shows ready, so a harvest that leaves them growing again counts as done. */
+	static void noteReady(Route route, World w, Progress progress, long since)
+	{
+		for (Stop s : route.getStops())
+		{
+			for (Task t : s.getTasks())
+			{
+				Spot spot = t.getSpot();
+				Reading r = spot == null ? null : w.live.get(spot);
+				if (r != null && r.getStatus() == Status.READY && r.getSeen() != null && r.getSeen().getTime() >= since)
+				{
+					progress.sawReady(spot);
+				}
+			}
+		}
 	}
 
 	static Step travel(Stop stop, Place place, World w, int current, int done, int total)
@@ -431,7 +448,8 @@ public final class Guide
 					return task(t, "Pay to clear the tree", where + ": ask the gardener to remove it for 200 coins.",
 						Step.Target.npc(at, spot.getGardener()), at, current, done, total, ItemID.COINS);
 				}
-				return task(t, "Chop it down", where, here, at, current, done, total);
+				return task(t, "Chop it down", where + ": chop it with your axe.", here, at, current, done, total,
+					owned(Supplies.AXES, w.ability).stream().mapToInt(Integer::intValue).toArray());
 			case CLEAR:
 				return task(t, "Dig it up", where + ": clear it with your spade.", here, at, current, done, total, ItemID.SPADE);
 			case CURE:

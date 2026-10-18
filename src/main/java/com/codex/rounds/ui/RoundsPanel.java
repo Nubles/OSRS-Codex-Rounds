@@ -6,6 +6,7 @@ import com.codex.rounds.core.Kingdom;
 import com.codex.rounds.core.Leprechaun;
 import com.codex.rounds.core.Need;
 import com.codex.rounds.core.Route;
+import com.codex.rounds.core.Settings;
 import com.codex.rounds.core.Spot;
 import com.codex.rounds.core.Status;
 import com.codex.rounds.core.Step;
@@ -253,11 +254,26 @@ public class RoundsPanel extends PluginPanel
 			buttons.add(spacer());
 			buttons.add(new CodexButton("End", false, actions::stop));
 		}
-		else if (!route.isEmpty())
+		else
 		{
-			buttons.add(new CodexButton("Start round", true, actions::start));
-			buttons.add(spacer());
-			buttons.add(new CodexButton("Replan", false, actions::replan));
+			// Two buttons fit the card: the quick Fossil Island loop takes Replan's place when it is on offer.
+			if (!route.isEmpty())
+			{
+				buttons.add(new CodexButton("Start round", true, actions::start));
+			}
+			if (quickReady())
+			{
+				if (buttons.getComponentCount() > 0)
+				{
+					buttons.add(spacer());
+				}
+				buttons.add(new CodexButton("Quick loop", false, actions::startQuick));
+			}
+			else if (!route.isEmpty())
+			{
+				buttons.add(spacer());
+				buttons.add(new CodexButton("Replan", false, actions::replan));
+			}
 		}
 		if (buttons.getComponentCount() > 0)
 		{
@@ -302,6 +318,23 @@ public class RoundsPanel extends PluginPanel
 			strip.add(well);
 		}
 		return strip;
+	}
+
+	/** Whether a bird house or seaweed patch is ready, so a quick Fossil Island loop is worth offering. */
+	private boolean quickReady()
+	{
+		if (view.board == null)
+		{
+			return false;
+		}
+		for (Board.Entry e : view.board.getEntries())
+		{
+			if (e.getStatus() == Status.READY && e.getSpot() != null && Settings.QUICK.contains(e.getSpot().getGroup()))
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private Row pullRow(Need n)

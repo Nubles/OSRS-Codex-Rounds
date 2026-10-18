@@ -3,6 +3,7 @@ package com.codex.rounds;
 import com.codex.rounds.core.Ability;
 import com.codex.rounds.core.BankTab;
 import com.codex.rounds.core.Board;
+import com.codex.rounds.core.Contract;
 import com.codex.rounds.core.Daily;
 import com.codex.rounds.core.DailyState;
 import com.codex.rounds.core.Format;
@@ -79,7 +80,9 @@ import net.runelite.api.gameval.InterfaceID;
 import net.runelite.api.gameval.InventoryID;
 import net.runelite.api.gameval.VarPlayerID;
 import net.runelite.api.gameval.VarbitID;
+import net.runelite.api.WidgetNode;
 import net.runelite.api.widgets.Widget;
+import net.runelite.api.widgets.WidgetModalMode;
 import net.runelite.client.Notifier;
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.chat.ChatColorType;
@@ -202,9 +205,13 @@ public class CodexRoundsPlugin extends Plugin
 	private volatile Set<Integer> tabItems = Collections.emptySet();
 	private boolean tabOpened;
 	private boolean tabWanted;
+	/** The running round covers only bird houses and seaweed. */
+	private boolean quick;
 	private boolean dirty;
 	private boolean unsaved;
 	private boolean replan = true;
+	/** A running round keeps its route; only starting it or pressing Replan plans it again. */
+	private boolean roundReplan;
 	private int ticks;
 	private String published;
 	private boolean notified;
@@ -270,6 +277,7 @@ public class CodexRoundsPlugin extends Plugin
 			memory = null;
 			profile = null;
 			progress.stop();
+			quick = false;
 			timer.reset();
 		});
 		panel = null;
@@ -311,8 +319,16 @@ public class CodexRoundsPlugin extends Plugin
 	@Subscribe
 	public void onRuneScapeProfileChanged(RuneScapeProfileChanged event)
 	{
+		String key = configManager.getRSProfileKey();
+		if (key == null || key.equals(profile))
+		{
+			// Logging out or a disconnect keeps the round; it carries on when the same account is back.
+			save();
+			return;
+		}
 		save();
 		progress.stop();
+		quick = false;
 		timer.reset();
 		loadProfile();
 		replan = true;
@@ -326,9 +342,12 @@ public class CodexRoundsPlugin extends Plugin
 		{
 			return;
 		}
-		settings = readSettings();
-		replan = true;
-		clientThread.invokeLater(() -> refresh(true));
+		clientThread.invokeLater(() ->
+		{
+			settings = readSettings();
+			replan = true;
+			refresh(true);
+		});
 	}
 
 	@Subscribe
@@ -412,6 +431,14 @@ public class CodexRoundsPlugin extends Plugin
 		if (client.isMenuOpen())
 		{
 			return;
+		}
+		// Varbits are not sent while a modal interface is open, as RuneLite's Time Tracking notes.
+		for (WidgetNode node : client.getComponentTable())
+		{
+			if (node.getModalMode() != WidgetModalMode.NON_MODAL)
+			{
+				return;
+			}
 		}
 		int removals = 0;
 		Map<Spot, Integer> houses = new EnumMap<>(Spot.class);
@@ -499,6 +526,14 @@ public class CodexRoundsPlugin extends Plugin
 			memory.crafting = crafting;
 			memory.magic = magic;
 			memory.spellbook = book;
+			dirty = true;
+			unsaved = true;
+		}
+
+		int contract = Contract.complete(vars) ? 0 : Contract.type(vars);
+		if (contract != memory.contractType)
+		{
+			memory.contractType = contract;
 			dirty = true;
 			unsaved = true;
 		}
@@ -693,6 +728,7 @@ public class CodexRoundsPlugin extends Plugin
 			return;
 		}
 		long now = Instant.now().getEpochSecond();
+		settings.contract(settings.wants(Daily.CONTRACT) ? Contract.produce(memory.contractType) : null);
 		Ability ability = memory.ability();
 		List<DailyState> dailies = dailies(now);
 		Kingdom kingdom = memory.kingdom(now);
@@ -704,9 +740,12 @@ public class CodexRoundsPlugin extends Plugin
 				route = Planner.plan(board, dailies, settings, ability, here(), now);
 				replan = false;
 			}
-			else if (progress.isStarted() && replan)
+			else if (progress.isStarted() && roundReplan)
 			{
-				route = Planner.plan(board, dailies, settings, ability, here(), now);
+				// Chores already finished leave the new plan, so bank them for the round's tally.
+				progress.bank(step.getDone(), step.getStopIndex() < 0 ? 0 : step.getStopIndex());
+				route = Planner.plan(board, dailies, roundSettings(), ability, here(), now);
+				roundReplan = false;
 				replan = false;
 			}
 			dirty = false;
@@ -719,9 +758,16 @@ public class CodexRoundsPlugin extends Plugin
 			dailyMap.put(d.getDaily(), d);
 		}
 		Guide.World world = new Guide.World(here(), readings(now), dailyMap, kingdom, carried, ability, now);
-		Step next = progress.isStarted() ? Guide.next(route, world, progress, settings) : Guide.next(route, world, new Progress(), settings);
+		Step next = progress.isStarted() ? Guide.next(route, world, progress, roundSettings()) : Guide.next(route, world, new Progress(), settings);
 		step = next;
 
+		if (progress.isStarted() && route.isEmpty())
+		{
+			// Nothing left to plan (or nothing was due): a round with no chores is over.
+			finishRound(now);
+			next = Step.IDLE;
+			step = next;
+		}
 		if (progress.isStarted())
 		{
 			if (!route.isEmpty() && route.getStops().get(0).getPlace().contains(here()))
@@ -776,6 +822,12 @@ public class CodexRoundsPlugin extends Plugin
 	}
 
 	/** "Wait 14 min and 5 more join: giant seaweed and bird houses." */
+	/** The settings the running round was planned with: a quick loop narrows them. */
+	private Settings roundSettings()
+	{
+		return quick && progress.isStarted() ? settings.quickLoop() : settings;
+	}
+
 	private String forecastText(long now)
 	{
 		if (board == null)
@@ -807,22 +859,26 @@ public class CodexRoundsPlugin extends Plugin
 	private void finishRound(long now)
 	{
 		int seconds = (int) (now - progress.getStartedAt());
-		int chores = route.taskCount();
-		memory.record(new Memory.RoundRecord(now, seconds, chores, route.getStops().size()));
-		unsaved = true;
+		int chores = progress.getBankedChores() + route.taskCount();
+		int stops = progress.getBankedStops() + route.getStops().size();
 		progress.stop();
+		if (chores == 0)
+		{
+			quick = false;
+			timer.reset();
+			replan = true;
+			chat("nothing is due right now, so there is no round to run.");
+			return;
+		}
+		memory.record(new Memory.RoundRecord(now, seconds, chores, stops));
+		unsaved = true;
+		quick = false;
 		timer.reset();
 		replan = true;
 		if (config.chatSummary())
 		{
-			String msg = new ChatMessageBuilder()
-				.append(ChatColorType.HIGHLIGHT)
-				.append("Codex Rounds: ")
-				.append(ChatColorType.NORMAL)
-				.append("round complete in " + Format.clock(seconds) + ", " + chores + (chores == 1 ? " chore at " : " chores at ")
-					+ route.getStops().size() + (route.getStops().size() == 1 ? " stop." : " stops."))
-				.build();
-			chatMessageManager.queue(QueuedMessage.builder().type(ChatMessageType.CONSOLE).runeLiteFormattedMessage(msg).build());
+			chat("round complete in " + Format.clock(seconds) + ", " + chores + (chores == 1 ? " chore at " : " chores at ")
+				+ stops + (stops == 1 ? " stop." : " stops."));
 		}
 	}
 
@@ -1100,13 +1156,14 @@ public class CodexRoundsPlugin extends Plugin
 		}
 		Guide.World world = new Guide.World(here(), live, dailyMap, memory == null ? null : memory.kingdom(now), carried,
 			memory == null ? Ability.unknown() : memory.ability(), now);
+		Settings rs = roundSettings();
 		Set<String> doneKeys = new HashSet<>();
 		long since = progress.isStarted() ? progress.getStartedAt() : r.getBuiltAt();
 		for (Stop s : r.getStops())
 		{
 			for (Task t : s.getTasks())
 			{
-				if (snapshot.isStarted() && Guide.isDone(t, world, snapshot, settings, since))
+				if (snapshot.isStarted() && Guide.isDone(t, world, snapshot, rs, since))
 				{
 					doneKeys.add(Progress.key(t));
 				}
@@ -1202,6 +1259,7 @@ public class CodexRoundsPlugin extends Plugin
 			.daily(Daily.BERT, config.bert())
 			.daily(Daily.HERB_BOXES, config.herbBoxes())
 			.daily(Daily.LUNDAIL, config.lundail())
+			.daily(Daily.CONTRACT, config.contract())
 			.kingdom(config.kingdom())
 			.kingdomTargets(config.approvalTarget(), config.cofferTarget(), config.topUpSlack())
 			.compost(config.compost())
@@ -1237,11 +1295,24 @@ public class CodexRoundsPlugin extends Plugin
 		@Override
 		public void start()
 		{
+			begin(false);
+		}
+
+		@Override
+		public void startQuick()
+		{
+			begin(true);
+		}
+
+		private void begin(boolean quickLoop)
+		{
 			clientThread.invokeLater(() ->
 			{
+				quick = quickLoop;
 				progress.start(Instant.now().getEpochSecond());
 				timer.reset();
 				replan = true;
+				roundReplan = true;
 				refresh(true);
 			});
 		}
@@ -1252,6 +1323,7 @@ public class CodexRoundsPlugin extends Plugin
 			clientThread.invokeLater(() ->
 			{
 				progress.stop();
+				quick = false;
 				timer.reset();
 				replan = true;
 				refresh(true);
@@ -1304,6 +1376,7 @@ public class CodexRoundsPlugin extends Plugin
 			clientThread.invokeLater(() ->
 			{
 				replan = true;
+				roundReplan = progress.isStarted();
 				dirty = true;
 				refresh(true);
 			});

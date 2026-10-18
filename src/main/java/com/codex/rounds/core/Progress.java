@@ -1,6 +1,7 @@
 package com.codex.rounds.core;
 
 import java.util.EnumMap;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -14,6 +15,9 @@ public final class Progress
 	private final Map<Spot, Long> paid = new EnumMap<>(Spot.class);
 	private boolean suppliesDone;
 	private boolean leprechaunDone;
+	private int bankedChores;
+	private int bankedStops;
+	private final Set<Spot> sawReady = EnumSet.noneOf(Spot.class);
 	private long startedAt;
 
 	public static String key(Task t)
@@ -81,6 +85,34 @@ public final class Progress
 		this.suppliesDone = true;
 	}
 
+	/** Chores and stops finished before a mid-round replan, which drops them from the new route. */
+	public void bank(int chores, int stops)
+	{
+		bankedChores += chores;
+		bankedStops += stops;
+	}
+
+	public int getBankedChores()
+	{
+		return bankedChores;
+	}
+
+	public int getBankedStops()
+	{
+		return bankedStops;
+	}
+
+	/** A fresh reading during the round showed the spot ready, so growing again afterwards means it was harvested. */
+	public void sawReady(Spot spot)
+	{
+		sawReady.add(spot);
+	}
+
+	public boolean wasSeenReady(Spot spot)
+	{
+		return sawReady.contains(spot);
+	}
+
 	public boolean isLeprechaunDone()
 	{
 		return leprechaunDone;
@@ -104,6 +136,9 @@ public final class Progress
 		paid.clear();
 		suppliesDone = false;
 		leprechaunDone = false;
+		bankedChores = 0;
+		bankedStops = 0;
+		sawReady.clear();
 		startedAt = now;
 	}
 
