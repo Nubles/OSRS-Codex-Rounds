@@ -32,6 +32,9 @@ public enum Daily
 	public static final int HERB_BOX_MAX = 15;
 	public static final int SAND_QUEST_COMPLETE = 160;
 	public static final int ROBIN_PER_TIER = 13;
+	/** Robin takes unnoted bones of any kind; the common ones count as packed. */
+	static final int[] ROBIN_BONES = {ItemID.BONES, ItemID.BAT_BONES, ItemID.BIG_BONES, ItemID.BABYDRAGON_BONES, ItemID.DRAGON_BONES,
+		ItemID.WOLF_BONES, ItemID.ZOGRE_BONES, ItemID.WYVERN_BONES, ItemID.LAVA_DRAGON_BONES};
 	public static final int BERT_SAND = 84;
 
 	private final String label;
@@ -250,7 +253,7 @@ public enum Daily
 			case FLAX:
 				return new Need(Need.Kind.DAILY, "Flax (noted is fine)", n, "the Flax keeper", false, ItemID.FLAX, ItemID.FLAX + 1);
 			case ROBIN:
-				return new Need(Need.Kind.DAILY, "Bones (noted is fine)", n, "Robin", false, ItemID.BONES, ItemID.BONES + 1);
+				return new Need(Need.Kind.DAILY, "Bones, unnoted (any kind)", n, "Robin", false, ROBIN_BONES);
 			default:
 				return null;
 		}

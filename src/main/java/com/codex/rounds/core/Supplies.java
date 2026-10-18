@@ -21,6 +21,9 @@ public final class Supplies
 	static final int[] AXES = {ItemID.DRAGON_AXE, ItemID.CRYSTAL_AXE, ItemID.INFERNAL_AXE, ItemID.TRAILBLAZER_AXE, ItemID.RUNE_AXE,
 		ItemID.ADAMANT_AXE, ItemID.MITHRIL_AXE, ItemID.BLACK_AXE, ItemID.STEEL_AXE, ItemID.IRON_AXE, ItemID.BRONZE_AXE,
 		ItemID.CRYSTAL_AXE_INACTIVE, ItemID.INFERNAL_AXE_EMPTY};
+	/** Any gloves protect from nightshade; these are the pairs most players wear, so the need is optional. */
+	static final int[] GLOVES = {ItemID.LEATHER_GLOVES, ItemID.HUNDRED_GAUNTLETS_LEVEL_10, ItemID.HUNDRED_GAUNTLETS_LEVEL_9,
+		ItemID.HUNDRED_GAUNTLETS_LEVEL_8, ItemID.FEROCIOUS_GLOVES, ItemID.GRACEFUL_GLOVES, ItemID.ICE_GLOVES};
 
 	private Supplies()
 	{
@@ -176,7 +179,7 @@ public final class Supplies
 			}
 			if (gloves)
 			{
-				add(lines, new Need(Need.Kind.TOOL, "Gloves (any pair)", 1, "nightshade", false, ItemID.LEATHER_GLOVES), false);
+				add(lines, new Need(Need.Kind.TOOL, "Gloves (any pair)", 1, "nightshade", true, GLOVES), false);
 			}
 			if (cure)
 			{
@@ -343,6 +346,16 @@ public final class Supplies
 				return "Monkey nuts";
 			case ItemID.MM_MONKEY_BAR:
 				return "Monkey bar";
+			case ItemID.SACK_CABBAGE_10:
+				return "Sacks of cabbages";
+			case ItemID.BASKET_TOMATO_5:
+				return "Baskets of tomatoes";
+			case ItemID.BASKET_STRAWBERRY_5:
+				return "Baskets of strawberries";
+			case ItemID.WHITE_BERRIES:
+				return "White berries";
+			case ItemID.CURRY_LEAF:
+				return "Curry leaves";
 			case ItemID.LUNAR_GROUNDTOOTH:
 				return "Ground tooth";
 			default:

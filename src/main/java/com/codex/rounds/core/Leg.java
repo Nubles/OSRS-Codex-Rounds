@@ -30,6 +30,7 @@ public final class Leg
 	private final int magicLevel;
 	private final int spellbook;
 	private final int extraSeconds;
+	private Unlock requires;
 
 	private Leg(Kind kind, String label, Point landing, int[] items, int magicLevel, int spellbook, int extraSeconds)
 	{
@@ -63,6 +64,19 @@ public final class Leg
 	public static Leg directions(String label, int x, int y, int seconds)
 	{
 		return new Leg(Kind.DIRECTIONS, label, Point.of(x, y), new int[0], 0, -1, seconds);
+	}
+
+	/** The same leg, open only once the account has this unlock. */
+	public Leg needs(Unlock unlock)
+	{
+		Leg copy = new Leg(kind, label, landing, items, magicLevel, spellbook, extraSeconds);
+		copy.requires = unlock;
+		return copy;
+	}
+
+	public Unlock getRequires()
+	{
+		return requires;
 	}
 
 	public Kind getKind()

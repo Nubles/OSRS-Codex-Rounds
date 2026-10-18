@@ -7,11 +7,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumMap;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import net.runelite.api.gameval.ItemID;
 import net.runelite.api.gameval.VarbitID;
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -544,5 +546,28 @@ public class CoreTest
 		Guide.next(route, w, progress, s);
 		live.put(Spot.SEAWEED_N, Growth.read(Spot.SEAWEED_N, new Seen(5, T0 + 700), T0 + 700, Growth.Offset.NONE));
 		assertTrue(Guide.isDone(weed, w, progress, s, T0));
+	}
+
+	@Test
+	public void skipsTeleportsWhoseQuestIsNotDone()
+	{
+		Point bank = Point.of(3164, 3486);
+		Ability unknown = Ability.builder().item(6099, 1).build();
+		assertEquals("Teleport crystal: Prifddinas", Travel.best(bank, Place.PRIFDDINAS, unknown).getLeg().getLabel());
+		Ability done = Ability.builder().item(6099, 1).unlocks(EnumSet.of(Unlock.SONG_OF_THE_ELVES)).build();
+		assertEquals("Teleport crystal: Prifddinas", Travel.best(bank, Place.PRIFDDINAS, done).getLeg().getLabel());
+		Ability notDone = Ability.builder().item(6099, 1).unlocks(EnumSet.noneOf(Unlock.class)).build();
+		Travel.Way way = Travel.best(bank, Place.PRIFDDINAS, notDone);
+		assertTrue(way == null || way.getLeg().getRequires() != Unlock.SONG_OF_THE_ELVES);
+	}
+
+	@Test
+	public void auditedFarmingData()
+	{
+		assertEquals(76, Produce.IASOR.getLevel());
+		assertEquals(76, Produce.KRONOS.getLevel());
+		assertArrayEquals(new int[]{ItemID.DRAGONFRUIT, 8}, Produce.ROSEWOOD.getPayment());
+		assertTrue(Leprechaun.PLACES.contains(Place.CANIFIS));
+		assertEquals("Sacks of cabbages", Supplies.itemName(ItemID.SACK_CABBAGE_10));
 	}
 }

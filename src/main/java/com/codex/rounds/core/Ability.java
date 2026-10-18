@@ -1,8 +1,10 @@
 package com.codex.rounds.core;
 
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 /** What the account can use: items it owns, levels, spellbook and travel unlocks. */
 public final class Ability
@@ -10,6 +12,8 @@ public final class Ability
 	private final Map<Integer, Integer> owned;
 	private final Map<Integer, Integer> stored;
 	private final Map<String, Integer> paces;
+	private final Set<Unlock> unlocks;
+	private final boolean unlocksKnown;
 	private final boolean bankKnown;
 	private final int farming;
 	private final int hunter;
@@ -23,6 +27,8 @@ public final class Ability
 		this.owned = Collections.unmodifiableMap(new HashMap<>(b.owned));
 		this.stored = Collections.unmodifiableMap(new HashMap<>(b.stored));
 		this.paces = Collections.unmodifiableMap(new HashMap<>(b.paces));
+		this.unlocks = b.unlocks == null ? EnumSet.noneOf(Unlock.class) : EnumSet.copyOf(b.unlocks);
+		this.unlocksKnown = b.unlocks != null;
 		this.bankKnown = b.bankKnown;
 		this.farming = b.farming;
 		this.hunter = b.hunter;
@@ -120,6 +126,11 @@ public final class Ability
 	/** Whether a way of travelling is open to this account. */
 	public boolean canUse(Leg leg)
 	{
+		// Before quests were ever read, assume the unlock is there rather than hide every route.
+		if (leg.getRequires() != null && unlocksKnown && !unlocks.contains(leg.getRequires()))
+		{
+			return false;
+		}
 		switch (leg.getKind())
 		{
 			case ITEM:
@@ -138,6 +149,7 @@ public final class Ability
 		private final Map<Integer, Integer> owned = new HashMap<>();
 		private final Map<Integer, Integer> stored = new HashMap<>();
 		private final Map<String, Integer> paces = new HashMap<>();
+		private Set<Unlock> unlocks;
 		private boolean bankKnown;
 		private int farming = 1;
 		private int hunter = 1;
@@ -178,6 +190,13 @@ public final class Ability
 					}
 				});
 			}
+			return this;
+		}
+
+		/** The unlocks the account has, or null when they were never read. */
+		public Builder unlocks(Set<Unlock> unlocks)
+		{
+			this.unlocks = unlocks == null ? null : EnumSet.copyOf(unlocks.isEmpty() ? EnumSet.noneOf(Unlock.class) : unlocks);
 			return this;
 		}
 

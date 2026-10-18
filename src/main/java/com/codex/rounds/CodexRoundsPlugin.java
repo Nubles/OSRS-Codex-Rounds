@@ -23,6 +23,7 @@ import com.codex.rounds.core.Spot;
 import com.codex.rounds.core.Status;
 import com.codex.rounds.core.Step;
 import com.codex.rounds.core.TravelTimer;
+import com.codex.rounds.core.Unlock;
 import com.codex.rounds.core.Stop;
 import com.codex.rounds.core.Task;
 import com.codex.rounds.core.Teleports;
@@ -129,6 +130,9 @@ public class CodexRoundsPlugin extends Plugin
 	private static final int QUEST_TICKS = 100;
 	private static final int PUBLISH_TICKS = 10;
 	private static final int SCAN_RADIUS = 10;
+	/** Quetzal landing sites built, as bits of the quetzals varp (from the Shortest Path plugin's data). */
+	private static final int QUETZAL_KASTORI_BIT = 16384;
+	private static final int QUETZAL_WYRM_BIT = 64;
 	/** The bank tab holding the round's pull list. */
 	static final String BANK_TAG = "codex rounds";
 
@@ -603,6 +607,43 @@ public class CodexRoundsPlugin extends Plugin
 				dirty = true;
 				unsaved = true;
 			}
+			Set<String> unlocks = readUnlocks();
+			if (!unlocks.equals(memory.unlocks))
+			{
+				memory.unlocks = unlocks;
+				dirty = true;
+				unsaved = true;
+			}
+		}
+	}
+
+	private Set<String> readUnlocks()
+	{
+		Set<String> out = new HashSet<>();
+		addIf(out, Unlock.FREMENNIK_TRIALS, finished(Quest.THE_FREMENNIK_TRIALS));
+		addIf(out, Unlock.CHILDREN_OF_THE_SUN, finished(Quest.CHILDREN_OF_THE_SUN));
+		addIf(out, Unlock.GREAT_CONCH, Quest.TROUBLED_TORTUGANS.getState(client) != QuestState.NOT_STARTED);
+		addIf(out, Unlock.THRONE_OF_MISCELLANIA, finished(Quest.THRONE_OF_MISCELLANIA));
+		addIf(out, Unlock.SONG_OF_THE_ELVES, finished(Quest.SONG_OF_THE_ELVES));
+		addIf(out, Unlock.BONE_VOYAGE, finished(Quest.BONE_VOYAGE));
+		addIf(out, Unlock.PLAGUE_CITY, finished(Quest.PLAGUE_CITY));
+		int quetzals = client.getVarpValue(VarPlayerID.QUETZALS_UNLOCKED);
+		addIf(out, Unlock.QUETZAL_KASTORI, (quetzals & QUETZAL_KASTORI_BIT) != 0);
+		addIf(out, Unlock.QUETZAL_WYRM, (quetzals & QUETZAL_WYRM_BIT) != 0);
+		addIf(out, Unlock.ATES_KASTORI, client.getVarbitValue(VarbitID.PENDANT_OF_ATES_TLATI_FOUND) > 0);
+		return out;
+	}
+
+	private boolean finished(Quest q)
+	{
+		return q.getState(client) == QuestState.FINISHED;
+	}
+
+	private static void addIf(Set<String> out, Unlock u, boolean has)
+	{
+		if (has)
+		{
+			out.add(u.name());
 		}
 	}
 

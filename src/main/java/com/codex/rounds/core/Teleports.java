@@ -37,7 +37,7 @@ public final class Teleports
 	static final int TAI_BWO_WANNAI_SCROLL = 12409;
 
 	/** Staffs that work fairy rings without the Lumbridge elite diary. */
-	public static final int[] FAIRY_STAFFS = {772, 9084, 13280, 13342};
+	public static final int[] FAIRY_STAFFS = {772, 9084};
 
 	private Teleports()
 	{

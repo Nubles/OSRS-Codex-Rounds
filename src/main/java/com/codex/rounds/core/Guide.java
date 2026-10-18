@@ -252,7 +252,7 @@ public final class Guide
 			case FAIRY_RING:
 				title = leg.getLabel();
 				detail = "Dial " + leg.getLabel().replace("Fairy ring ", "") + " for " + detail;
-				items.addAll(owned(new int[]{772, 9084, 13280, 13342}, w.ability));
+				items.addAll(owned(Teleports.FAIRY_STAFFS, w.ability));
 				break;
 			default:
 				title = leg.getLabel();
@@ -441,7 +441,7 @@ public final class Guide
 				return task(t, "Check its health", where + ": check the " + spot.kindName().toLowerCase() + "'s health.", here, at, current, done, total);
 			case HARVEST:
 				return task(t, Planner.harvestText(spot, r.getProduce() == null ? "" : r.getProduce().getName().toLowerCase()), where, here, at,
-					current, done, total, kind == PatchKind.BELLADONNA ? new int[]{ItemID.LEATHER_GLOVES} : Supplies.SECATEURS);
+					current, done, total, kind == PatchKind.BELLADONNA ? Supplies.GLOVES : Supplies.SECATEURS);
 			case CHOP:
 				if (Planner.isTree(spot) && spot.getGardener() >= 0)
 				{

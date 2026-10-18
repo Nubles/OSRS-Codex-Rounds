@@ -1,9 +1,11 @@
 package com.codex.rounds.core;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Everything Rounds remembers for one account, saved as JSON in the RuneLite profile. Fields
@@ -17,6 +19,8 @@ public final class Memory
 	public Map<Integer, Integer> bank = new HashMap<>();
 	public Map<Integer, Integer> carried = new HashMap<>();
 	public long bankTime;
+	/** Teleport unlocks, by name; null until quests were first read. */
+	public Set<String> unlocks;
 	/** The running farming contract's type varbit, 0 when none or when done. */
 	public int contractType;
 	/** Measured teleport legs: key to average seconds and how many laps it is drawn from. */
@@ -195,7 +199,8 @@ public final class Memory
 			.items(bank)
 			.items(carried)
 			.stored(stored)
-			.paces(paceMap());
+			.paces(paceMap())
+			.unlocks(unlockSet());
 		return b.build();
 	}
 
@@ -220,6 +225,27 @@ public final class Memory
 		int n = Math.min(p.laps, PACE_WINDOW - 1);
 		p.seconds = (p.seconds * n + seconds) / (n + 1);
 		p.laps++;
+	}
+
+	Set<Unlock> unlockSet()
+	{
+		if (unlocks == null)
+		{
+			return null;
+		}
+		Set<Unlock> out = EnumSet.noneOf(Unlock.class);
+		for (String u : unlocks)
+		{
+			try
+			{
+				out.add(Unlock.valueOf(u));
+			}
+			catch (IllegalArgumentException e)
+			{
+				// A name from a later version: ignore it.
+			}
+		}
+		return out;
 	}
 
 	Map<String, Integer> paceMap()

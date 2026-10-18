@@ -16,10 +16,12 @@ public final class Leprechaun
 {
 	/** Stops where a tool leprechaun stands by the patches, so stored tools can be taken out there. */
 	public static final Set<Place> PLACES = EnumSet.of(Place.FARMING_GUILD, Place.FOSSIL_ISLAND, Place.UNDERWATER,
-		Place.TAI_BWO_WANNAI, Place.PRIFDDINAS);
+		Place.TAI_BWO_WANNAI, Place.PRIFDDINAS, Place.HOSIDIUS, Place.ETCETERIA, Place.BRIMHAVEN, Place.PORT_SARIM,
+		Place.RIMMINGTON, Place.ARDOUGNE_MONASTERY, Place.CHAMPIONS_GUILD, Place.AL_KHARID, Place.DRAYNOR_MANOR,
+		Place.CANIFIS, Place.KASTORI, Place.AUBURNVALE);
 
 	public static final int[] NPCS = {NpcID.FARMING_TOOLS_LEPRECHAUN, NpcID.FOSSIL_LEPRECHAUN_UNDERWATER,
-		NpcID.FARMING_TOOLS_LEPRECHAUN_VARLAMORE};
+		NpcID.FARMING_TOOLS_LEPRECHAUN_VARLAMORE, NpcID.FARMING_TOOLS_LEPRECHAUN_DRAYNOR};
 
 	private static final int NONE = -1;
 
