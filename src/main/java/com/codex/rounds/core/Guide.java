@@ -17,6 +17,10 @@ import net.runelite.api.gameval.ItemID;
 public final class Guide
 {
 	static final int[] COMPOST = {ItemID.BUCKET_ULTRACOMPOST, ItemID.BUCKET_SUPERCOMPOST, ItemID.BOTTOMLESS_COMPOST_BUCKET_FILLED};
+	/** Tiles from a bird house area past which the island's mushtrees beat walking. */
+	static final int MUSHTREE_RIDE = 60;
+	/** Tiles from a bird house area within which the player is already there. */
+	static final int NEAR_HOUSES = 40;
 
 	private Guide()
 	{
@@ -298,6 +302,53 @@ public final class Guide
 				bestDist = d;
 			}
 		}
+		return valleyFirst(best, stop, w, progress, settings, since);
+	}
+
+	/**
+	 * Bird houses go Verdant Valley first, then Mushroom Meadow: the meadow's mushtree is the way off the
+	 * island's west, so ending there saves the walk back. Only when the player isn't already at the meadow.
+	 */
+	private static Task valleyFirst(Task best, Stop stop, World w, Progress progress, Settings settings, long since)
+	{
+		if (best == null || best.getType() != Board.Type.SPOT || !best.getSpot().isBirdhouse() || isValley(best.getSpot())
+			|| w.player == null || areaDistance(best.getSpot(), w.player) <= NEAR_HOUSES)
+		{
+			return best;
+		}
+		Task valley = null;
+		int valleyDist = Integer.MAX_VALUE;
+		for (Task t : stop.getTasks())
+		{
+			if (t.getType() == Board.Type.SPOT && isValley(t.getSpot()) && !isDone(t, w, progress, settings, since))
+			{
+				int d = w.player == null ? 0 : t.getSpot().getPoint().distance(w.player);
+				if (d < valleyDist)
+				{
+					valley = t;
+					valleyDist = d;
+				}
+			}
+		}
+		return valley == null ? best : valley;
+	}
+
+	private static boolean isValley(Spot s)
+	{
+		return s == Spot.BIRDHOUSE_VALLEY_NE || s == Spot.BIRDHOUSE_VALLEY_SW;
+	}
+
+	/** Tiles from the player to the nearest bird house in the same area (Verdant Valley or Mushroom Meadow) as this one. */
+	static int areaDistance(Spot house, Point player)
+	{
+		int best = Integer.MAX_VALUE;
+		for (Spot s : Spot.values())
+		{
+			if (s.isBirdhouse() && isValley(s) == isValley(house))
+			{
+				best = Math.min(best, s.getPoint().distance(player));
+			}
+		}
 		return best;
 	}
 
@@ -356,6 +407,12 @@ public final class Guide
 		Reading r = w.live.get(spot);
 		Point at = spot.getPoint();
 		Step.Target here = Step.Target.spot(spot);
+		if (spot.isBirdhouse() && w.player != null && areaDistance(spot, w.player) > MUSHTREE_RIDE)
+		{
+			String to = isValley(spot) ? "Verdant Valley" : "Mushroom Meadow";
+			return task(t, "Take a Magic Mushtree", "Ride it to " + to + " for the bird house there: " + spot.getLabel() + ".", here, at,
+				current, done, total);
+		}
 		if (r == null || r.getStatus() == Status.UNSEEN)
 		{
 			return task(t, "Look at the " + spot.kindName().toLowerCase(), spot.getLabel() + ": walk up to it so the round can read it.", here, at,
@@ -386,7 +443,7 @@ public final class Guide
 					houses);
 			}
 			return task(t, "Craft a bird house", "Use a chisel on your " + Supplies.logName(type).toLowerCase()
-				+ " with clockwork in your pack, then build it on the space.", here, at, current, done, total, ItemID.CHISEL, type.getLogId());
+				+ " with clockwork in your pack, then build it on the space.", here, at, current, done, total, ItemID.CHISEL, ItemID.JEWELLERS_CHISEL, type.getLogId());
 		}
 
 		String where = spot.getLabel();
@@ -413,7 +470,7 @@ public final class Guide
 					}
 					b.append(pay[i + 1]).append(' ').append(Supplies.itemName(pay[i]).toLowerCase());
 				}
-				return task(t, "Pay the gardener", "Talk to the gardener and pay " + b + " to protect it.",
+				return task(t, "Pay the gardener", "Choose Pay on the gardener and hand over " + b + " to protect it.",
 					Step.Target.npc(at, spot.getGardener()), at, current, done, total, ids);
 			}
 			long left = r.secondsLeft(w.now);

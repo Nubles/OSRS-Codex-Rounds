@@ -43,6 +43,8 @@ public final class Memory
 	public int magic = 1;
 	public int spellbook;
 	public boolean fairyRings;
+	/** Any ironman mode: seeds can't be bought, so only the ones owned are planned. */
+	public boolean ironman;
 
 	/** Finished rounds, newest last, kept short. */
 	public List<RoundRecord> rounds = new ArrayList<>();
@@ -195,6 +197,7 @@ public final class Memory
 			.levels(farming, hunter, crafting, magic)
 			.spellbook(spellbook)
 			.fairyRings(fairyRings)
+			.ironman(ironman)
 			.bankKnown(bankTime > 0)
 			.items(bank)
 			.items(carried)

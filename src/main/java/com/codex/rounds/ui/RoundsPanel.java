@@ -10,6 +10,7 @@ import com.codex.rounds.core.Settings;
 import com.codex.rounds.core.Spot;
 import com.codex.rounds.core.Status;
 import com.codex.rounds.core.Step;
+import com.codex.rounds.core.Supplies;
 import com.codex.rounds.core.Stop;
 import com.codex.rounds.core.Task;
 import java.awt.BorderLayout;
@@ -180,6 +181,11 @@ public class RoundsPanel extends PluginPanel
 			if (!view.bankKnown)
 			{
 				list.add(note("Open your bank once so Rounds can plan with the teleports and supplies you own."));
+			}
+			if (view.slots > Supplies.PACK_SLOTS)
+			{
+				list.add(note("This takes about " + view.slots + " slots, more than a full pack. Take what the first stops need, "
+					+ "then stop at a bank on the way, or turn some chores off for this round."));
 			}
 			Need.Kind kind = null;
 			for (Need n : route.getPulls())
@@ -368,13 +374,20 @@ public class RoundsPanel extends PluginPanel
 			badge = "Check";
 			color = Theme.TEXT_MUTED;
 		}
+		else if (!view.ironman && (n.getKind() == Need.Kind.PLANT || n.getKind() == Need.Kind.PAYMENT))
+		{
+			// Seeds, saplings and payments the account is short of: a main can pick them up at the Grand Exchange.
+			badge = "Buy";
+			color = Theme.BLOOD;
+		}
 		else
 		{
 			badge = "Short";
 			color = Theme.BLOOD;
 		}
 		String title = (n.getQuantity() > 1 ? Format.stack(n.getQuantity()) + " x " : "") + n.getLabel();
-		return new Row(icons, n.getItemId(), title, n.getWhy(), badge, color, false);
+		String why = "Buy".equals(badge) ? n.getWhy() + " · short " + Format.number(n.getQuantity() - carried - banked) + ", buy on the GE" : n.getWhy();
+		return new Row(icons, n.getItemId(), title, why, badge, color, false);
 	}
 
 	private StackPanel buildBoard()

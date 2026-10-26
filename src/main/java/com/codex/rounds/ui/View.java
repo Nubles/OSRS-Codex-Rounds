@@ -28,11 +28,18 @@ public final class View
 	public final boolean leprechaunFirst;
 	/** A suggestion to wait for more chores, or null. */
 	public final String forecast;
+	/** Any ironman mode: nothing short can be bought. */
+	public final boolean ironman;
+	/** Roughly the pack slots the pull list takes. */
+	public final int slots;
 
 	public View(boolean loggedIn, boolean known, Board board, Route route, Step step, boolean running, long startedAt, long now,
-		boolean bankKnown, Map<Integer, Integer> carried, Map<Integer, Integer> bank, String lastRound, Map<Integer, Integer> stored, boolean leprechaunFirst, String forecast)
+		boolean bankKnown, Map<Integer, Integer> carried, Map<Integer, Integer> bank, String lastRound, Map<Integer, Integer> stored, boolean leprechaunFirst, String forecast,
+		boolean ironman, int slots)
 	{
+		this.slots = slots;
 		this.forecast = forecast;
+		this.ironman = ironman;
 		this.stored = stored;
 		this.leprechaunFirst = leprechaunFirst;
 		this.loggedIn = loggedIn;
@@ -51,7 +58,7 @@ public final class View
 
 	public static View empty()
 	{
-		return new View(false, false, null, Route.EMPTY, Step.IDLE, false, 0, 0, false, Collections.emptyMap(), Collections.emptyMap(), null, Collections.emptyMap(), false, null);
+		return new View(false, false, null, Route.EMPTY, Step.IDLE, false, 0, 0, false, Collections.emptyMap(), Collections.emptyMap(), null, Collections.emptyMap(), false, null, false, 0);
 	}
 
 	int stored(int... ids)

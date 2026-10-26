@@ -238,7 +238,13 @@ public final class Planner
 			return new Task(Board.Type.SPOT, spot, null, r, null, false, false, spot.getTitle(), detail, secs);
 		}
 
-		Produce plant = leavesEmpty(spot, r, settings) ? choosePlant(spot.getKind(), settings, ability) : null;
+		boolean empties = leavesEmpty(spot, r, settings);
+		Produce plant = empties ? choosePlant(spot.getKind(), settings, ability) : null;
+		if (empties && plant == null && (r.getAction() == Action.PLANT || r.getAction() == Action.RAKE))
+		{
+			// Nothing to harvest and nothing the player can plant: the visit would be wasted.
+			return null;
+		}
 		Produce contract = settings.getContract();
 		if (plant != null && contract != null && spot.getPlace() == Place.FARMING_GUILD && contract.getKind() == spot.getKind()
 			&& contract.getLevel() <= ability.getFarming())
@@ -297,11 +303,15 @@ public final class Planner
 		}
 	}
 
-	/** The crop to plant: the player's pick if they can plant it, else the best they own, else the best they could. */
+	/**
+	 * The crop to plant: the player's pick if they can plant it, else the best they own, else the best they could.
+	 * An ironman can't buy seeds, so once the bank is known only seeds they own are planned.
+	 */
 	public static Produce choosePlant(PatchKind kind, Settings settings, Ability ability)
 	{
+		boolean ownedOnly = ability.isIronman() && ability.isBankKnown();
 		Produce chosen = settings.getCrop(kind);
-		if (chosen != null && chosen.getLevel() <= ability.getFarming())
+		if (chosen != null && chosen.getLevel() <= ability.getFarming() && (!ownedOnly || ability.owns(chosen.getSeedId())))
 		{
 			return chosen;
 		}
@@ -323,7 +333,7 @@ public final class Planner
 		{
 			return bestOwned;
 		}
-		if (kind == PatchKind.ANIMA || kind == PatchKind.HESPORI)
+		if (ownedOnly || kind == PatchKind.ANIMA || kind == PatchKind.HESPORI)
 		{
 			// Rare seeds: only plan one the account has, or might have when the bank is unknown.
 			return ability.isBankKnown() ? null : bestAny;
