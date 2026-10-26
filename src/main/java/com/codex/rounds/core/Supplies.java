@@ -9,6 +9,7 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.IntPredicate;
 import net.runelite.api.gameval.ItemID;
 
 /** The pull list: everything a round needs, merged and in bank-tab order. */
@@ -17,6 +18,8 @@ public final class Supplies
 	public static final int GARDENER_CLEAR_FEE = 200;
 	static final int[] COMPOST_ULTRA = {ItemID.BUCKET_ULTRACOMPOST, ItemID.BOTTOMLESS_COMPOST_BUCKET_FILLED};
 	static final int[] COMPOST_SUPER = {ItemID.BUCKET_SUPERCOMPOST, ItemID.BUCKET_ULTRACOMPOST, ItemID.BOTTOMLESS_COMPOST_BUCKET_FILLED};
+	static final int[] HAMMERS = {ItemID.HAMMER, ItemID.IMCANDO_HAMMER, ItemID.IMCANDO_HAMMER_OFFHAND};
+	static final int[] CHISELS = {ItemID.CHISEL, ItemID.JEWELLERS_CHISEL};
 	static final int[] SECATEURS = {ItemID.FAIRY_ENCHANTED_SECATEURS, ItemID.SECATEURS};
 	static final int[] AXES = {ItemID.DRAGON_AXE, ItemID.CRYSTAL_AXE, ItemID.INFERNAL_AXE, ItemID.TRAILBLAZER_AXE, ItemID.RUNE_AXE,
 		ItemID.ADAMANT_AXE, ItemID.MITHRIL_AXE, ItemID.BLACK_AXE, ItemID.STEEL_AXE, ItemID.IRON_AXE, ItemID.BRONZE_AXE,
@@ -212,8 +215,8 @@ public final class Supplies
 			{
 				add(lines, new Need(Need.Kind.BIRDHOUSE, logName(type), houses, "building bird houses", false, type.getLogId()), true);
 				add(lines, new Need(Need.Kind.BIRDHOUSE, "Clockwork", houses, "building bird houses", false, ItemID.POH_CLOCKWORK_MECHANISM), true);
-				add(lines, new Need(Need.Kind.TOOL, "Hammer", 1, "building bird houses", false, ItemID.HAMMER), false);
-				add(lines, new Need(Need.Kind.TOOL, "Chisel", 1, "building bird houses", false, ItemID.CHISEL), false);
+				add(lines, new Need(Need.Kind.TOOL, "Hammer", 1, "building bird houses", false, HAMMERS), false);
+				add(lines, new Need(Need.Kind.TOOL, "Chisel", 1, "building bird houses", false, CHISELS), false);
 			}
 			add(lines, new Need(Need.Kind.BIRDHOUSE, "Hop seeds", seeds, "ten a bird house", false, seedOrder(ability)), true);
 		}
@@ -225,6 +228,27 @@ public final class Supplies
 		List<Need> out = new ArrayList<>(lines.values());
 		out.sort(Comparator.comparing(Need::getKind).thenComparing(Need::isOptional));
 		return out;
+	}
+
+	/** Slots in a full pack. */
+	public static final int PACK_SLOTS = 28;
+
+	/**
+	 * Roughly how many pack slots the pull list takes: one for a stack, one each for anything that doesn't
+	 * stack. Worn gear takes none, nor optional lines.
+	 */
+	public static int slots(List<Need> pulls, IntPredicate stackable)
+	{
+		int n = 0;
+		for (Need need : pulls)
+		{
+			if (need.isOptional() || need.getLabel().endsWith("(worn)"))
+			{
+				continue;
+			}
+			n += stackable.test(need.getItemId()) ? 1 : need.getQuantity();
+		}
+		return n;
 	}
 
 	/** Merges a line in: stackable lines add quantities, single items stay at one. */

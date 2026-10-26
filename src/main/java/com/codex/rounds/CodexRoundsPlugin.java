@@ -22,6 +22,7 @@ import com.codex.rounds.core.Settings;
 import com.codex.rounds.core.Spot;
 import com.codex.rounds.core.Status;
 import com.codex.rounds.core.Step;
+import com.codex.rounds.core.Supplies;
 import com.codex.rounds.core.TravelTimer;
 import com.codex.rounds.core.Unlock;
 import com.codex.rounds.core.Stop;
@@ -523,8 +524,11 @@ public class CodexRoundsPlugin extends Plugin
 		int crafting = client.getRealSkillLevel(Skill.CRAFTING);
 		int magic = client.getRealSkillLevel(Skill.MAGIC);
 		int book = client.getVarbitValue(VarbitID.SPELLBOOK);
-		if (farming != memory.farming || hunter != memory.hunter || crafting != memory.crafting || magic != memory.magic || book != memory.spellbook)
+		boolean ironman = client.getVarbitValue(VarbitID.IRONMAN) > 0;
+		if (farming != memory.farming || hunter != memory.hunter || crafting != memory.crafting || magic != memory.magic || book != memory.spellbook
+			|| ironman != memory.ironman)
 		{
+			memory.ironman = ironman;
 			memory.farming = farming;
 			memory.hunter = hunter;
 			memory.crafting = crafting;
@@ -1183,7 +1187,8 @@ public class CodexRoundsPlugin extends Plugin
 			memory != null && memory.bankTime > 0, new HashMap<>(carried), bank, last,
 			memory == null || memory.stored == null ? Collections.emptyMap() : new HashMap<>(memory.stored),
 			!route.isEmpty() && Leprechaun.PLACES.contains(route.getStops().get(0).getPlace()),
-			forecastText(now));
+			forecastText(now), memory != null && memory.ironman,
+			Supplies.slots(route.getPulls(), id -> itemManager.getItemComposition(id).isStackable()));
 		Progress snapshot = progress;
 		Route r = route;
 		Map<Spot, Reading> live = memory == null ? Collections.emptyMap() : readings(now);
@@ -1312,6 +1317,31 @@ public class CodexRoundsPlugin extends Plugin
 		s.crop(com.codex.rounds.core.farming.PatchKind.BUSH, produce(config.bush().name()));
 		s.crop(com.codex.rounds.core.farming.PatchKind.CACTUS, produce(config.cactus().name()));
 		s.crop(com.codex.rounds.core.farming.PatchKind.ANIMA, produce(config.anima().name()));
+		for (Spot spot : Spot.values())
+		{
+			// Each special tree can be left off on its own, under the Special trees switch.
+			if (spot.getKind() == null)
+			{
+				continue;
+			}
+			switch (spot.getKind())
+			{
+				case CALQUAT:
+					s.spot(spot, config.calquat());
+					break;
+				case CELASTRUS:
+					s.spot(spot, config.celastrus());
+					break;
+				case REDWOOD:
+					s.spot(spot, config.redwood());
+					break;
+				case CRYSTAL_TREE:
+					s.spot(spot, config.crystalTree());
+					break;
+				default:
+					break;
+			}
+		}
 		return s;
 	}
 

@@ -245,11 +245,59 @@ public interface CodexRoundsConfig extends Config
 	}
 
 	@ConfigItem(
+		keyName = "calquat",
+		name = "Calquat trees",
+		description = "Tai Bwo Wannai, Kastori and the Great Conch, when Special trees is on",
+		section = CHORES,
+		position = 4
+	)
+	default boolean calquat()
+	{
+		return true;
+	}
+
+	@ConfigItem(
+		keyName = "celastrus",
+		name = "Celastrus tree",
+		description = "The Farming Guild's celastrus patch, when Special trees is on",
+		section = CHORES,
+		position = 5
+	)
+	default boolean celastrus()
+	{
+		return true;
+	}
+
+	@ConfigItem(
+		keyName = "redwood",
+		name = "Redwood tree",
+		description = "The Farming Guild's redwood patch, when Special trees is on",
+		section = CHORES,
+		position = 6
+	)
+	default boolean redwood()
+	{
+		return true;
+	}
+
+	@ConfigItem(
+		keyName = "crystalTree",
+		name = "Crystal tree",
+		description = "Prifddinas' crystal tree patch, when Special trees is on",
+		section = CHORES,
+		position = 7
+	)
+	default boolean crystalTree()
+	{
+		return true;
+	}
+
+	@ConfigItem(
 		keyName = "spiritTrees",
 		name = "Spirit trees",
 		description = "Every spirit tree patch",
 		section = CHORES,
-		position = 4
+		position = 8
 	)
 	default boolean spiritTrees()
 	{
@@ -261,7 +309,7 @@ public interface CodexRoundsConfig extends Config
 		name = "Special patches",
 		description = "Cactus, bush, mushroom, belladonna, anima and Hespori",
 		section = CHORES,
-		position = 5
+		position = 9
 	)
 	default boolean specialPatches()
 	{

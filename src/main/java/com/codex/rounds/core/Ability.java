@@ -21,6 +21,7 @@ public final class Ability
 	private final int magic;
 	private final int spellbook;
 	private final boolean fairyRings;
+	private final boolean ironman;
 
 	private Ability(Builder b)
 	{
@@ -36,6 +37,7 @@ public final class Ability
 		this.magic = b.magic;
 		this.spellbook = b.spellbook;
 		this.fairyRings = b.fairyRings;
+		this.ironman = b.ironman;
 	}
 
 	public static Builder builder()
@@ -123,6 +125,12 @@ public final class Ability
 		return fairyRings;
 	}
 
+	/** Any ironman mode, which can't buy seeds or saplings. */
+	public boolean isIronman()
+	{
+		return ironman;
+	}
+
 	/** Whether a way of travelling is open to this account. */
 	public boolean canUse(Leg leg)
 	{
@@ -157,6 +165,7 @@ public final class Ability
 		private int magic = 1;
 		private int spellbook;
 		private boolean fairyRings;
+		private boolean ironman;
 
 		public Builder item(int id, int qty)
 		{
@@ -233,6 +242,12 @@ public final class Ability
 		public Builder fairyRings(boolean fairyRings)
 		{
 			this.fairyRings = fairyRings;
+			return this;
+		}
+
+		public Builder ironman(boolean ironman)
+		{
+			this.ironman = ironman;
 			return this;
 		}
 
