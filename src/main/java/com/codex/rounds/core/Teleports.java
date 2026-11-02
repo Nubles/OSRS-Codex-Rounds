@@ -35,6 +35,14 @@ public final class Teleports
 	static final int KHARYRLL_TABLET = 12779;
 	static final int FELDIP_HILLS_SCROLL = 12404;
 	static final int TAI_BWO_WANNAI_SCROLL = 12409;
+	static final int LUMBRIDGE_TABLET = 8008;
+	static final int FALADOR_TABLET = 8009;
+	static final int CATHERBY_TABLET = 24961;
+	static final int HARMONY_TABLET = 19625;
+	static final int TROLLHEIM_TABLET = 11747;
+	static final int ROYAL_SEED_POD = 19564;
+	static final int STONY_BASALT = 22601;
+	static final int ICY_BASALT = 22599;
 
 	/** Staffs that work fairy rings without the Lumbridge elite diary. */
 	public static final int[] FAIRY_STAFFS = {772, 9084};

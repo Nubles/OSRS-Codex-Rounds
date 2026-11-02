@@ -635,6 +635,10 @@ public class CodexRoundsPlugin extends Plugin
 		addIf(out, Unlock.QUETZAL_KASTORI, (quetzals & QUETZAL_KASTORI_BIT) != 0);
 		addIf(out, Unlock.QUETZAL_WYRM, (quetzals & QUETZAL_WYRM_BIT) != 0);
 		addIf(out, Unlock.ATES_KASTORI, client.getVarbitValue(VarbitID.PENDANT_OF_ATES_TLATI_FOUND) > 0);
+		addIf(out, Unlock.MOURNINGS_END_I, finished(Quest.MOURNINGS_END_PART_I));
+		addIf(out, Unlock.MY_ARMS_BIG_ADVENTURE, finished(Quest.MY_ARMS_BIG_ADVENTURE));
+		addIf(out, Unlock.MAKING_FRIENDS_WITH_MY_ARM, finished(Quest.MAKING_FRIENDS_WITH_MY_ARM));
+		addIf(out, Unlock.MORYTANIA_ELITE, client.getVarbitValue(VarbitID.MORYTANIA_DIARY_ELITE_COMPLETE) == 1);
 		return out;
 	}
 
@@ -815,9 +819,12 @@ public class CodexRoundsPlugin extends Plugin
 		}
 		if (progress.isStarted())
 		{
-			if (!route.isEmpty() && route.getStops().get(0).getPlace().contains(here()))
+			for (int t = 0; !route.isEmpty() && t < route.tripCount(); t++)
 			{
-				progress.suppliesDone();
+				if (route.getStops().get(route.tripStart(t)).getPlace().contains(here()))
+				{
+					progress.tripSupplied(t);
+				}
 			}
 			TravelTimer.Lap lap = timer.update(next, route, here(), ability, System.currentTimeMillis());
 			if (lap != null)
@@ -1296,6 +1303,9 @@ public class CodexRoundsPlugin extends Plugin
 			.group(Spot.Group.TREES, config.specialTrees())
 			.group(Spot.Group.SPIRIT_TREES, config.spiritTrees())
 			.group(Spot.Group.PATCHES, config.specialPatches())
+			.group(Spot.Group.TREE_PATCHES, config.treePatches())
+			.group(Spot.Group.FRUIT_TREES, config.fruitTrees())
+			.group(Spot.Group.HERBS, config.herbPatches())
 			.daily(Daily.ZAFF, config.zaff())
 			.daily(Daily.CROMPERTY, config.cromperty())
 			.daily(Daily.FLAX, config.flax())
@@ -1317,6 +1327,13 @@ public class CodexRoundsPlugin extends Plugin
 		s.crop(com.codex.rounds.core.farming.PatchKind.BUSH, produce(config.bush().name()));
 		s.crop(com.codex.rounds.core.farming.PatchKind.CACTUS, produce(config.cactus().name()));
 		s.crop(com.codex.rounds.core.farming.PatchKind.ANIMA, produce(config.anima().name()));
+		s.crop(com.codex.rounds.core.farming.PatchKind.TREE, produce(config.treeCrop().name()));
+		s.crop(com.codex.rounds.core.farming.PatchKind.FRUIT_TREE, produce(config.fruitTreeCrop().name()));
+		s.crop(com.codex.rounds.core.farming.PatchKind.HERB, produce(config.herbCrop().name()));
+		for (Spot spot : Settings.leftOut(config.skipPatches()))
+		{
+			s.spot(spot, false);
+		}
 		for (Spot spot : Spot.values())
 		{
 			// Each special tree can be left off on its own, under the Special trees switch.
@@ -1416,7 +1433,7 @@ public class CodexRoundsPlugin extends Plugin
 				}
 				else if (step.getKind() == Step.Kind.SUPPLIES)
 				{
-					progress.suppliesDone();
+					progress.tripSupplied(route.isEmpty() || step.getStopIndex() < 0 ? 0 : route.tripOf(step.getStopIndex()));
 				}
 				refresh(true);
 			});

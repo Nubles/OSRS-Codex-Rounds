@@ -69,7 +69,48 @@ public enum Produce
 	CELASTRUS("Celastrus", PatchKind.CELASTRUS, ItemID.BATTLESTAFF, 160, 6, 0, 4, ItemID.PLANTPOT_CELASTRUS_TREE_SAPLING, 85, ItemID.CACTUS_POTATO, 8),
 	REDWOOD("Redwood", PatchKind.REDWOOD, ItemID.REDWOOD_LOGS, 640, 11, 0, 1, ItemID.PLANTPOT_REDWOOD_TREE_SAPLING, 90, ItemID.DRAGONFRUIT, 6),
 	HESPORI("Hespori", PatchKind.HESPORI, ItemID.HESPORI_SEED, 640, 4, 0, 2, ItemID.HESPORI_SEED, 65),
-	CRYSTAL_TREE("Crystal tree", PatchKind.CRYSTAL_TREE, ItemID.PLANTPOT_CRYSTAL_TREE_SAPLING, 80, 7, 0, 1, ItemID.PLANTPOT_CRYSTAL_TREE_SAPLING, 74);
+	CRYSTAL_TREE("Crystal tree", PatchKind.CRYSTAL_TREE, ItemID.PLANTPOT_CRYSTAL_TREE_SAPLING, 80, 7, 0, 1, ItemID.PLANTPOT_CRYSTAL_TREE_SAPLING, 74),
+
+	// Trees
+	OAK("Oak", PatchKind.TREE, ItemID.OAK_LOGS, 40, 5, 0, 1, ItemID.PLANTPOT_OAK_SAPLING, 15, ItemID.BASKET_TOMATO_5, 1),
+	WILLOW("Willow", PatchKind.TREE, ItemID.WILLOW_LOGS, 40, 7, 0, 1, ItemID.PLANTPOT_WILLOW_SAPLING, 30, ItemID.BASKET_APPLE_5, 1),
+	MAPLE("Maple", PatchKind.TREE, ItemID.MAPLE_LOGS, 40, 9, 0, 1, ItemID.PLANTPOT_MAPLE_SAPLING, 45, ItemID.BASKET_ORANGE_5, 1),
+	YEW("Yew", PatchKind.TREE, ItemID.YEW_LOGS, 40, 11, 0, 1, ItemID.PLANTPOT_YEW_SAPLING, 60, ItemID.CACTUS_SPINE, 10),
+	MAGIC("Magic", PatchKind.TREE, ItemID.MAGIC_LOGS, 40, 13, 0, 1, ItemID.PLANTPOT_MAGIC_TREE_SAPLING, 75, ItemID.COCONUT, 25),
+
+	// Fruit trees
+	APPLE("Apple", PatchKind.FRUIT_TREE, ItemID.COOKING_APPLE, 160, 7, 45, 7, ItemID.PLANTPOT_APPLE_SAPLING, 27, ItemID.SWEETCORN, 9),
+	BANANA("Banana", PatchKind.FRUIT_TREE, ItemID.BANANA, 160, 7, 45, 7, ItemID.PLANTPOT_BANANA_SAPLING, 33, ItemID.BASKET_APPLE_5, 4),
+	ORANGE("Orange", PatchKind.FRUIT_TREE, ItemID.ORANGE, 160, 7, 45, 7, ItemID.PLANTPOT_ORANGE_SAPLING, 39, ItemID.BASKET_STRAWBERRY_5, 3),
+	CURRY("Curry", PatchKind.FRUIT_TREE, ItemID.CURRY_LEAF, 160, 7, 45, 7, ItemID.PLANTPOT_CURRY_SAPLING, 42, ItemID.BASKET_BANANA_5, 5),
+	PINEAPPLE("Pineapple", PatchKind.FRUIT_TREE, ItemID.PINEAPPLE, 160, 7, 45, 7, ItemID.PLANTPOT_PINEAPPLE_SAPLING, 51, ItemID.WATERMELON, 10),
+	PAPAYA("Papaya", PatchKind.FRUIT_TREE, ItemID.PAPAYA, 160, 7, 45, 7, ItemID.PLANTPOT_PAPAYA_SAPLING, 57, ItemID.PINEAPPLE, 10),
+	PALM("Palm", PatchKind.FRUIT_TREE, ItemID.COCONUT, 160, 7, 45, 7, ItemID.PLANTPOT_PALM_SAPLING, 68, ItemID.PAPAYA, 15),
+	DRAGONFRUIT("Dragonfruit", PatchKind.FRUIT_TREE, ItemID.DRAGONFRUIT, 160, 7, 45, 7, ItemID.PLANTPOT_DRAGONFRUIT_SAPLING, 81, ItemID.COCONUT, 15),
+
+	// Herbs: they cannot be protected, so ultracompost and magic secateurs do the work
+	GUAM("Guam", PatchKind.HERB, ItemID.GUAM_LEAF, 20, 5, 0, 3, ItemID.GUAM_SEED, 9),
+	MARRENTILL("Marrentill", PatchKind.HERB, ItemID.MARENTILL, 20, 5, 0, 3, ItemID.MARRENTILL_SEED, 14),
+	TARROMIN("Tarromin", PatchKind.HERB, ItemID.TARROMIN, 20, 5, 0, 3, ItemID.TARROMIN_SEED, 19),
+	HARRALANDER("Harralander", PatchKind.HERB, ItemID.HARRALANDER, 20, 5, 0, 3, ItemID.HARRALANDER_SEED, 26),
+	RANARR("Ranarr", PatchKind.HERB, ItemID.RANARR_WEED, 20, 5, 0, 3, ItemID.RANARR_SEED, 32),
+	TOADFLAX("Toadflax", PatchKind.HERB, ItemID.TOADFLAX, 20, 5, 0, 3, ItemID.TOADFLAX_SEED, 38),
+	IRIT("Irit", PatchKind.HERB, ItemID.IRIT_LEAF, 20, 5, 0, 3, ItemID.IRIT_SEED, 44),
+	AVANTOE("Avantoe", PatchKind.HERB, ItemID.AVANTOE, 20, 5, 0, 3, ItemID.AVANTOE_SEED, 50),
+	KWUARM("Kwuarm", PatchKind.HERB, ItemID.KWUARM, 20, 5, 0, 3, ItemID.KWUARM_SEED, 56),
+	HUASCA("Huasca", PatchKind.HERB, ItemID.HUASCA, 20, 5, 0, 3, ItemID.HUASCA_SEED, 58),
+	SNAPDRAGON("Snapdragon", PatchKind.HERB, ItemID.SNAPDRAGON, 20, 5, 0, 3, ItemID.SNAPDRAGON_SEED, 62),
+	CADANTINE("Cadantine", PatchKind.HERB, ItemID.CADANTINE, 20, 5, 0, 3, ItemID.CADANTINE_SEED, 67),
+	LANTADYME("Lantadyme", PatchKind.HERB, ItemID.LANTADYME, 20, 5, 0, 3, ItemID.LANTADYME_SEED, 73),
+	DWARF_WEED("Dwarf weed", PatchKind.HERB, ItemID.DWARF_WEED, 20, 5, 0, 3, ItemID.DWARF_WEED_SEED, 79),
+	TORSTOL("Torstol", PatchKind.HERB, ItemID.TORSTOL, 20, 5, 0, 3, ItemID.TORSTOL_SEED, 85),
+	/** Only ever read from the patch: never offered for planting. */
+	GOUTWEED("Goutweed", PatchKind.HERB, ItemID.EADGAR_GOUTWEED_HERB, 20, 5, 0, 2, -1, Produce.NEVER_PLANTED),
+	/** An herb the patch shows without saying which (RuneLite reads it the same way). */
+	ANYHERB("Herbs", PatchKind.HERB, ItemID.GUAM_LEAF, 20, 5, 0, 3, -1, Produce.NEVER_PLANTED);
+
+	/** A level no account reaches, for crops read from a patch but never planted. */
+	public static final int NEVER_PLANTED = 1000;
 
 	private final String name;
 	private final PatchKind kind;

@@ -131,6 +131,12 @@ public final class Ability
 		return ironman;
 	}
 
+	/** Whether the account has an unlock; true until quests were ever read, so nothing is hidden on a guess. */
+	public boolean has(Unlock unlock)
+	{
+		return unlock == null || !unlocksKnown || unlocks.contains(unlock);
+	}
+
 	/** Whether a way of travelling is open to this account. */
 	public boolean canUse(Leg leg)
 	{

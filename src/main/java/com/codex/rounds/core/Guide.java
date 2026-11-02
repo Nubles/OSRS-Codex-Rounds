@@ -154,9 +154,11 @@ public final class Guide
 		}
 
 		Stop stop = route.getStops().get(current);
-		if (done == 0 && current == 0 && !progress.isSuppliesDone() && !stop.getPlace().contains(w.player))
+		int trip = route.tripOf(current);
+		boolean tripStart = current == route.tripStart(trip) && (trip > 0 || done == 0);
+		if (tripStart && !progress.isTripSupplied(trip) && !stop.getPlace().contains(w.player))
 		{
-			List<Need> missing = missing(route, w);
+			List<Need> missing = missing(route, w, trip);
 			if (!missing.isEmpty())
 			{
 				List<Integer> ids = new ArrayList<>();
@@ -170,7 +172,8 @@ public final class Guide
 					}
 					b.append(n.getQuantity() > 1 ? Format.number(n.getQuantity()) + " x " : "").append(n.getLabel().toLowerCase());
 				}
-				return new Step(Step.Kind.SUPPLIES, "Get your supplies", "Still to withdraw: " + b, null, ids, null, null, current, done, total);
+				String title = route.tripCount() > 1 ? "Bank for trip " + (trip + 1) + " of " + route.tripCount() : "Get your supplies";
+				return new Step(Step.Kind.SUPPLIES, title, "Still to withdraw: " + b, null, ids, null, null, current, done, total);
 			}
 		}
 
@@ -546,9 +549,16 @@ public final class Guide
 	/** What still has to come from the bank: stored tools are left out when the first stop has a leprechaun. */
 	public static List<Need> missing(Route route, World w)
 	{
-		boolean leprechaunFirst = !route.getStops().isEmpty() && Leprechaun.PLACES.contains(route.getStops().get(0).getPlace());
+		return missing(route, w, 0);
+	}
+
+	/** What still has to come from the bank for one trip of the round. */
+	public static List<Need> missing(Route route, World w, int trip)
+	{
+		int first = route.isEmpty() ? 0 : route.tripStart(trip);
+		boolean leprechaunFirst = !route.getStops().isEmpty() && Leprechaun.PLACES.contains(route.getStops().get(first).getPlace());
 		List<Need> out = new ArrayList<>();
-		for (Need n : route.getPulls())
+		for (Need n : route.getTripPulls(trip))
 		{
 			if (n.isOptional())
 			{

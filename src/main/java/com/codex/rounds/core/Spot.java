@@ -84,7 +84,58 @@ public enum Spot
 	ANIMA_GUILD("Farming Guild", Place.FARMING_GUILD, Group.PATCHES, PatchKind.ANIMA, VarbitID.FARMING_TRANSMIT_M,
 		Point.of(1232, 3723), -1, Bounds.ANY, -1),
 	HESPORI_GUILD("Farming Guild", Place.HESPORI, Group.PATCHES, PatchKind.HESPORI, VarbitID.FARMING_TRANSMIT_J,
-		Point.of(1247, 10087), -1, Bounds.ANY, 5021);
+		Point.of(1247, 10087), -1, Bounds.ANY, 5021),
+
+	TREE_LUMBRIDGE("Lumbridge", Place.LUMBRIDGE, Group.TREE_PATCHES, PatchKind.TREE, VarbitID.FARMING_TRANSMIT_A,
+		Point.of(3193, 3231), NpcID.FARMING_GARDENER_TREE_4, Bounds.ANY, 12594, 12850),
+	TREE_VARROCK("Varrock", Place.VARROCK_CASTLE, Group.TREE_PATCHES, PatchKind.TREE, VarbitID.FARMING_TRANSMIT_A,
+		Point.of(3229, 3459), NpcID.FARMING_GARDENER_TREE_3_02, Bounds.ANY, 12854, 12853),
+	TREE_FALADOR("Falador", Place.FALADOR_PARK, Group.TREE_PATCHES, PatchKind.TREE, VarbitID.FARMING_TRANSMIT_A,
+		Point.of(3004, 3373), NpcID.FARMING_GARDENER_TREE_2, Bounds.ANY, 11828, 12084),
+	TREE_TAVERLEY("Taverley", Place.TAVERLEY, Group.TREE_PATCHES, PatchKind.TREE, VarbitID.FARMING_TRANSMIT_A,
+		Point.of(2936, 3438), NpcID.FARMING_GARDENER_TREE_1, Bounds.ANY, 11573, 11829),
+	TREE_GNOME_STRONGHOLD("Gnome Stronghold", Place.GNOME_STRONGHOLD, Group.TREE_PATCHES, PatchKind.TREE, VarbitID.FARMING_TRANSMIT_A,
+		Point.of(2436, 3415), NpcID.FARMING_GARDENER_TREE_GNOME, Bounds.ANY, 9781, 9782, 9526, 9525),
+	TREE_GUILD("Farming Guild", Place.FARMING_GUILD, Group.TREE_PATCHES, PatchKind.TREE, VarbitID.FARMING_TRANSMIT_G,
+		Point.of(1232, 3736), NpcID.FARMING_GARDENER_FARMGUILD_T2, Bounds.ANY, -1),
+	TREE_AUBURNVALE("Auburnvale", Place.AUBURNVALE_WEST, Group.TREE_PATCHES, PatchKind.TREE, VarbitID.FARMING_TRANSMIT_A,
+		Point.of(1367, 3322), NpcID.FARMING_GARDENER_TREE_7, Bounds.ANY, 5427, 5428, 5684),
+
+	FRUIT_GNOME_STRONGHOLD("Gnome Stronghold", Place.GNOME_STRONGHOLD, Group.FRUIT_TREES, PatchKind.FRUIT_TREE, VarbitID.FARMING_TRANSMIT_B,
+		Point.of(2476, 3446), NpcID.FARMING_GARDENER_FRUIT_1, Bounds.ANY, 9781, 9782, 9526, 9525),
+	FRUIT_GNOME_VILLAGE("Tree Gnome Village", Place.TREE_GNOME_VILLAGE, Group.FRUIT_TREES, PatchKind.FRUIT_TREE, VarbitID.FARMING_TRANSMIT_A,
+		Point.of(2490, 3180), NpcID.FARMING_GARDENER_FRUIT_2, Bounds.ANY, 9777, 10033),
+	FRUIT_BRIMHAVEN("Brimhaven", Place.BRIMHAVEN, Group.FRUIT_TREES, PatchKind.FRUIT_TREE, VarbitID.FARMING_TRANSMIT_A,
+		Point.of(2765, 3213), NpcID.GARTH, Bounds.ANY, 11058, 11057),
+	FRUIT_CATHERBY("Catherby", Place.CATHERBY, Group.FRUIT_TREES, PatchKind.FRUIT_TREE, VarbitID.FARMING_TRANSMIT_A,
+		Point.of(2860, 3433), NpcID.FARMING_GARDENER_FRUIT_4, Bounds.CATHERBY_FRUIT, 11317),
+	FRUIT_LLETYA("Lletya", Place.LLETYA, Group.FRUIT_TREES, PatchKind.FRUIT_TREE, VarbitID.FARMING_TRANSMIT_A,
+		Point.of(2347, 3162), NpcID.FARMING_GARDENER_FRUIT_TREE_5, Bounds.ANY, 9265, 11103),
+	FRUIT_GUILD("Farming Guild", Place.FARMING_GUILD, Group.FRUIT_TREES, PatchKind.FRUIT_TREE, VarbitID.FARMING_TRANSMIT_K,
+		Point.of(1242, 3758), NpcID.FARMING_GARDENER_FARMGUILD_T3, Bounds.ANY, -1),
+	FRUIT_KASTORI("Kastori", Place.KASTORI, Group.FRUIT_TREES, PatchKind.FRUIT_TREE, VarbitID.FARMING_TRANSMIT_B,
+		Point.of(1350, 3057), NpcID.FARMING_GARDENER_FRUIT_7, Bounds.ANY, 5423, 5167, 5424),
+
+	HERB_FALADOR("Falador", Place.FALADOR_FARM, Group.HERBS, PatchKind.HERB, VarbitID.FARMING_TRANSMIT_D,
+		Point.of(3058, 3311), -1, Bounds.FALADOR_FARM, 12083),
+	HERB_CATHERBY("Catherby", Place.CATHERBY, Group.HERBS, PatchKind.HERB, VarbitID.FARMING_TRANSMIT_D,
+		Point.of(2813, 3463), -1, Bounds.CATHERBY_FARM, 11062, 11061, 11318, 11317),
+	HERB_ARDOUGNE("Ardougne", Place.ARDOUGNE_FARM, Group.HERBS, PatchKind.HERB, VarbitID.FARMING_TRANSMIT_D,
+		Point.of(2670, 3374), -1, Bounds.ANY, 10548),
+	HERB_MORYTANIA("Morytania", Place.MORYTANIA_FARM, Group.HERBS, PatchKind.HERB, VarbitID.FARMING_TRANSMIT_D,
+		Point.of(3605, 3529), -1, Bounds.ANY, 14391, 14390),
+	HERB_HOSIDIUS("Hosidius", Place.HOSIDIUS_FARM, Group.HERBS, PatchKind.HERB, VarbitID.FARMING_TRANSMIT_D,
+		Point.of(1738, 3550), -1, Bounds.ANY, 6967, 6711),
+	HERB_GUILD("Farming Guild", Place.FARMING_GUILD, Group.HERBS, PatchKind.HERB, VarbitID.FARMING_TRANSMIT_E,
+		Point.of(1238, 3726), -1, Bounds.ANY, -1),
+	HERB_CIVITAS("Civitas illa Fortis", Place.CIVITAS_FARM, Group.HERBS, PatchKind.HERB, VarbitID.FARMING_TRANSMIT_D,
+		Point.of(1582, 3094), -1, Bounds.ANY, 6192, 6447, 6448, 6449, 6191, 6193),
+	HERB_TROLL_STRONGHOLD("Troll Stronghold", Place.TROLL_STRONGHOLD, Group.HERBS, PatchKind.HERB, VarbitID.FARMING_TRANSMIT_A,
+		Point.of(2826, 3694), -1, Bounds.ANY, 11321),
+	HERB_WEISS("Weiss", Place.WEISS, Group.HERBS, PatchKind.HERB, VarbitID.FARMING_TRANSMIT_A,
+		Point.of(2848, 3934), -1, Bounds.ANY, 11325),
+	HERB_HARMONY("Harmony Island", Place.HARMONY, Group.HERBS, PatchKind.HERB, VarbitID.FARMING_TRANSMIT_B,
+		Point.of(3789, 2837), -1, Bounds.ANY, 15148);
 
 
 	/** How the board groups spots. */
@@ -95,7 +146,10 @@ public enum Spot
 		HARDWOODS("Hardwood trees"),
 		TREES("Special trees"),
 		SPIRIT_TREES("Spirit trees"),
-		PATCHES("Special patches");
+		PATCHES("Special patches"),
+		TREE_PATCHES("Trees"),
+		FRUIT_TREES("Fruit trees"),
+		HERBS("Herbs");
 
 		private final String label;
 
@@ -116,7 +170,13 @@ public enum Spot
 		ANY,
 		GROUND,
 		FOSSIL_ISLAND,
-		PORT_SARIM;
+		PORT_SARIM,
+		/** RuneLite's FarmingWorld: the Catherby fruit tree is sent upstairs and east of the farm. */
+		CATHERBY_FRUIT,
+		/** Upstairs near the Catherby farm sends other varbits. */
+		CATHERBY_FARM,
+		/** South of this line is the Port Sarim spirit tree's patch. */
+		FALADOR_FARM;
 
 		boolean contains(Point loc)
 		{
@@ -139,6 +199,16 @@ public enum Spot
 					return loc.getPlane() == 0;
 				case PORT_SARIM:
 					return loc.getY() < 3272;
+				case CATHERBY_FRUIT:
+					return loc.getX() >= 2840 || loc.getY() < 3440 || loc.getPlane() == 1;
+				case CATHERBY_FARM:
+					if (loc.getX() >= 2816 && loc.getY() < 3456)
+					{
+						return loc.getX() < 2840 && loc.getY() >= 3440 && loc.getPlane() == 0;
+					}
+					return true;
+				case FALADOR_FARM:
+					return loc.getY() >= 3272;
 				default:
 					return true;
 			}
@@ -225,6 +295,12 @@ public enum Spot
 				return "Anima";
 			case HESPORI:
 				return "Hespori";
+			case TREE:
+				return "Tree";
+			case FRUIT_TREE:
+				return "Fruit tree";
+			case HERB:
+				return "Herbs";
 			default:
 				return kind.name();
 		}
@@ -294,6 +370,24 @@ public enum Spot
 	public String timeTrackingKey()
 	{
 		return isBirdhouse() ? "birdhouse." + varp : regions[0] + "." + varbit;
+	}
+
+	/** The quest or diary this patch needs, or null. */
+	public Unlock needs()
+	{
+		switch (this)
+		{
+			case FRUIT_LLETYA:
+				return Unlock.MOURNINGS_END_I;
+			case HERB_TROLL_STRONGHOLD:
+				return Unlock.MY_ARMS_BIG_ADVENTURE;
+			case HERB_WEISS:
+				return Unlock.MAKING_FRIENDS_WITH_MY_ARM;
+			case HERB_HARMONY:
+				return Unlock.MORYTANIA_ELITE;
+			default:
+				return null;
+		}
 	}
 
 	/** A stable key for saved data. */

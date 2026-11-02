@@ -244,6 +244,10 @@ public final class Board
 			{
 				r = r.as(Status.OFF, "Left out of rounds");
 			}
+			else if (!ability.has(spot.needs()))
+			{
+				r = r.as(Status.LOCKED, unlockHint(spot.needs()));
+			}
 			else if (r.getStatus() == Status.UNSEEN)
 			{
 				int need = requiredLevel(spot);
@@ -333,6 +337,23 @@ public final class Board
 				return "Needs the easy Wilderness diary";
 			case CONTRACT:
 				return "Talk to Guildmaster Jane in the Farming Guild (45 Farming)";
+			default:
+				return "Locked";
+		}
+	}
+
+	static String unlockHint(Unlock u)
+	{
+		switch (u)
+		{
+			case MOURNINGS_END_I:
+				return "Needs Mourning's End Part I";
+			case MY_ARMS_BIG_ADVENTURE:
+				return "Needs My Arm's Big Adventure";
+			case MAKING_FRIENDS_WITH_MY_ARM:
+				return "Needs Making Friends with My Arm";
+			case MORYTANIA_ELITE:
+				return "Needs the elite Morytania diary";
 			default:
 				return "Locked";
 		}

@@ -13,7 +13,7 @@ public final class Progress
 	private final Map<Spot, Long> planted = new EnumMap<>(Spot.class);
 	private final Map<Spot, Long> composted = new EnumMap<>(Spot.class);
 	private final Map<Spot, Long> paid = new EnumMap<>(Spot.class);
-	private boolean suppliesDone;
+	private final Set<Integer> suppliedTrips = new HashSet<>();
 	private boolean leprechaunDone;
 	private int bankedChores;
 	private int bankedStops;
@@ -77,12 +77,23 @@ public final class Progress
 
 	public boolean isSuppliesDone()
 	{
-		return suppliesDone;
+		return isTripSupplied(0);
 	}
 
 	public void suppliesDone()
 	{
-		this.suppliesDone = true;
+		tripSupplied(0);
+	}
+
+	/** The player has banked for this trip of a round too big for one pack. */
+	public boolean isTripSupplied(int trip)
+	{
+		return suppliedTrips.contains(trip);
+	}
+
+	public void tripSupplied(int trip)
+	{
+		suppliedTrips.add(trip);
 	}
 
 	/** Chores and stops finished before a mid-round replan, which drops them from the new route. */
@@ -134,7 +145,7 @@ public final class Progress
 		planted.clear();
 		composted.clear();
 		paid.clear();
-		suppliesDone = false;
+		suppliedTrips.clear();
 		leprechaunDone = false;
 		bankedChores = 0;
 		bankedStops = 0;

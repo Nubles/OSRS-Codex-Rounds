@@ -77,7 +77,31 @@ public final class Planner
 			stops.add(new Stop(p, way, byPlace.get(p)));
 			at = exit(p);
 		}
-		return new Route(stops, Supplies.forStops(stops, dailyStates, board.getKingdom(), settings, ability), now);
+		List<Need> pulls = Supplies.forStops(stops, dailyStates, board.getKingdom(), settings, ability);
+		if (Supplies.slotsEstimate(pulls) <= Supplies.PACK_SLOTS)
+		{
+			return new Route(stops, pulls, now);
+		}
+		// Too much for one pack: split the round where the stops' supplies would overflow it, banking between trips.
+		List<Integer> starts = new ArrayList<>();
+		List<List<Need>> tripPulls = new ArrayList<>();
+		int from = 0;
+		List<Need> fitted = null;
+		for (int i = 0; i < stops.size(); i++)
+		{
+			List<Need> with = Supplies.forStops(stops.subList(from, i + 1), dailyStates, board.getKingdom(), settings, ability);
+			if (fitted != null && Supplies.slotsEstimate(with) > Supplies.PACK_SLOTS)
+			{
+				starts.add(from);
+				tripPulls.add(fitted);
+				from = i;
+				with = Supplies.forStops(stops.subList(i, i + 1), dailyStates, board.getKingdom(), settings, ability);
+			}
+			fitted = with;
+		}
+		starts.add(from);
+		tripPulls.add(fitted);
+		return new Route(stops, pulls, now, starts, tripPulls);
 	}
 
 	/** Where you stand after finishing a place: the seabed and Hespori's cave come back up to the surface. */
@@ -263,7 +287,8 @@ public final class Planner
 	static boolean isTree(Spot spot)
 	{
 		PatchKind k = spot.getKind();
-		return k == PatchKind.HARDWOOD_TREE || k == PatchKind.REDWOOD || k == PatchKind.SPIRIT_TREE;
+		return k == PatchKind.HARDWOOD_TREE || k == PatchKind.REDWOOD || k == PatchKind.SPIRIT_TREE
+			|| k == PatchKind.TREE || k == PatchKind.FRUIT_TREE;
 	}
 
 	static boolean regrows(PatchKind k)
@@ -459,6 +484,8 @@ public final class Planner
 			case CELASTRUS:
 			case REDWOOD:
 			case CRYSTAL_TREE:
+			case TREE:
+			case FRUIT_TREE:
 				return true;
 			default:
 				return false;

@@ -923,6 +923,855 @@ public enum PatchKind
 				}
 				return null;
 			}
+		},
+	HERB("Herbs", false)
+		{
+			@Override
+			public PatchState forVarbitValue(int value)
+			{
+				if (value >= 0 && value <= 3)
+				{
+					// Herb patch[Rake,Inspect,Guide] 8135,8134,8133,8132
+					return new PatchState(Produce.WEEDS, CropState.GROWING, 3 - value, Action.RAKE);
+				}
+				if (value >= 4 && value <= 7)
+				{
+					// Herbs[Inspect,Guide] 14209,26825,26826,26827
+					return new PatchState(Produce.GUAM, CropState.GROWING, value - 4, Action.WAIT);
+				}
+				if (value >= 8 && value <= 10)
+				{
+					// Herbs[Pick,Inspect,Guide] 26828,26828,26828
+					return new PatchState(Produce.GUAM, CropState.HARVESTABLE, 10 - value, Action.HARVEST);
+				}
+				if (value >= 11 && value <= 14)
+				{
+					// Herbs[Inspect,Guide] 26829,39748,39749,39750
+					return new PatchState(Produce.MARRENTILL, CropState.GROWING, value - 11, Action.WAIT);
+				}
+				if (value >= 15 && value <= 17)
+				{
+					// Herbs[Pick,Inspect,Guide] 39751,39751,39751
+					return new PatchState(Produce.MARRENTILL, CropState.HARVESTABLE, 17 - value, Action.HARVEST);
+				}
+				if (value >= 18 && value <= 21)
+				{
+					// Herbs[Inspect,Guide] 39752,39753,39754,39755
+					return new PatchState(Produce.TARROMIN, CropState.GROWING, value - 18, Action.WAIT);
+				}
+				if (value >= 22 && value <= 24)
+				{
+					// Herbs[Pick,Inspect,Guide] 39756,39756,39756
+					return new PatchState(Produce.TARROMIN, CropState.HARVESTABLE, 24 - value, Action.HARVEST);
+				}
+				if (value >= 25 && value <= 28)
+				{
+					// Herbs[Inspect,Guide] 39757,39758,39759,39760
+					return new PatchState(Produce.HARRALANDER, CropState.GROWING, value - 25, Action.WAIT);
+				}
+				if (value >= 29 && value <= 31)
+				{
+					// Herbs[Pick,Inspect,Guide] 39761,39761,39761
+					return new PatchState(Produce.HARRALANDER, CropState.HARVESTABLE, 31 - value, Action.HARVEST);
+				}
+				if (value >= 32 && value <= 35)
+				{
+					// Herbs[Inspect,Guide] 39762,39763,39764,39765
+					return new PatchState(Produce.RANARR, CropState.GROWING, value - 32, Action.WAIT);
+				}
+				if (value >= 36 && value <= 38)
+				{
+					// Herbs[Pick,Inspect,Guide] 39766,39766,39766
+					return new PatchState(Produce.RANARR, CropState.HARVESTABLE, 38 - value, Action.HARVEST);
+				}
+				if (value >= 39 && value <= 42)
+				{
+					// Herbs[Inspect,Guide] 39777,39778,39779,39780
+					return new PatchState(Produce.TOADFLAX, CropState.GROWING, value - 39, Action.WAIT);
+				}
+				if (value >= 43 && value <= 45)
+				{
+					// Herbs[Pick,Inspect,Guide] 39781,39781,39781
+					return new PatchState(Produce.TOADFLAX, CropState.HARVESTABLE, 45 - value, Action.HARVEST);
+				}
+				if (value >= 46 && value <= 49)
+				{
+					// Herbs[Inspect,Guide] 39767,39768,39769,39770
+					return new PatchState(Produce.IRIT, CropState.GROWING, value - 46, Action.WAIT);
+				}
+				if (value >= 50 && value <= 52)
+				{
+					// Herbs[Pick,Inspect,Guide] 39771,39771,39771
+					return new PatchState(Produce.IRIT, CropState.HARVESTABLE, 52 - value, Action.HARVEST);
+				}
+				if (value >= 53 && value <= 56)
+				{
+					// Herbs[Inspect,Guide] 39772,39773,39774,39775
+					return new PatchState(Produce.AVANTOE, CropState.GROWING, value - 53, Action.WAIT);
+				}
+				if (value >= 57 && value <= 59)
+				{
+					// Herbs[Pick,Inspect,Guide] 39776,39776,39776
+					return new PatchState(Produce.AVANTOE, CropState.HARVESTABLE, 59 - value, Action.HARVEST);
+				}
+				if (value >= 60 && value <= 63)
+				{
+					// Herbs[Inspect,Guide] 55347,55348,55349,55350
+					return new PatchState(Produce.HUASCA, CropState.GROWING, value - 60, Action.WAIT);
+				}
+				if (value >= 64 && value <= 66)
+				{
+					// Herbs[Pick,Inspect,Guide] 55351,55351,55351
+					return new PatchState(Produce.HUASCA, CropState.HARVESTABLE, 66 - value, Action.HARVEST);
+				}
+				if (value == 67)
+				{
+					// Herb patch[Rake,Inspect,Guide] 8135
+					return new PatchState(Produce.WEEDS, CropState.GROWING, 3, Action.RAKE);
+				}
+				if (value >= 68 && value <= 71)
+				{
+					// Herbs[Inspect,Guide] 39782,39783,39784,39785
+					return new PatchState(Produce.KWUARM, CropState.GROWING, value - 68, Action.WAIT);
+				}
+				if (value >= 72 && value <= 74)
+				{
+					// Herbs[Pick,Inspect,Guide] 39786,39786,39786
+					return new PatchState(Produce.KWUARM, CropState.HARVESTABLE, 74 - value, Action.HARVEST);
+				}
+				if (value >= 75 && value <= 78)
+				{
+					// Herbs[Inspect,Guide] 39807,39808,39809,39810
+					return new PatchState(Produce.SNAPDRAGON, CropState.GROWING, value - 75, Action.WAIT);
+				}
+				if (value >= 79 && value <= 81)
+				{
+					// Herbs[Pick,Inspect,Guide] 39811,39811,39811
+					return new PatchState(Produce.SNAPDRAGON, CropState.HARVESTABLE, 81 - value, Action.HARVEST);
+				}
+				if (value >= 82 && value <= 85)
+				{
+					// Herbs[Inspect,Guide] 39787,39788,39789,39790
+					return new PatchState(Produce.CADANTINE, CropState.GROWING, value - 82, Action.WAIT);
+				}
+				if (value >= 86 && value <= 88)
+				{
+					// Herbs[Pick,Inspect,Guide] 39791,39791,39791
+					return new PatchState(Produce.CADANTINE, CropState.HARVESTABLE, 88 - value, Action.HARVEST);
+				}
+				if (value >= 89 && value <= 92)
+				{
+					// Herbs[Inspect,Guide] 39792,39793,39794,39795
+					return new PatchState(Produce.LANTADYME, CropState.GROWING, value - 89, Action.WAIT);
+				}
+				if (value >= 93 && value <= 95)
+				{
+					// Herbs[Pick,Inspect,Guide] 39796,39796,39796
+					return new PatchState(Produce.LANTADYME, CropState.HARVESTABLE, 95 - value, Action.HARVEST);
+				}
+				if (value >= 96 && value <= 99)
+				{
+					// Herbs[Inspect,Guide] 39797,39798,39799,39800
+					return new PatchState(Produce.DWARF_WEED, CropState.GROWING, value - 96, Action.WAIT);
+				}
+				if (value >= 100 && value <= 102)
+				{
+					// Herbs[Pick,Inspect,Guide] 39801,39801,39801
+					return new PatchState(Produce.DWARF_WEED, CropState.HARVESTABLE, 102 - value, Action.HARVEST);
+				}
+				if (value >= 103 && value <= 106)
+				{
+					// Herbs[Inspect,Guide] 39802,39803,39804,39805
+					return new PatchState(Produce.TORSTOL, CropState.GROWING, value - 103, Action.WAIT);
+				}
+				if (value >= 107 && value <= 109)
+				{
+					// Herbs[Pick,Inspect,Guide] 39806,39806,39806
+					return new PatchState(Produce.TORSTOL, CropState.HARVESTABLE, 109 - value, Action.HARVEST);
+				}
+				if (value >= 128 && value <= 130)
+				{
+					// Diseased herbs[Cure,Inspect,Guide] 8144,8145,8146
+					return new PatchState(Produce.GUAM, CropState.DISEASED, value - 127, Action.CURE);
+				}
+				if (value >= 131 && value <= 133)
+				{
+					// Diseased herbs[Cure,Inspect,Guide] 8144,8145,8146
+					return new PatchState(Produce.MARRENTILL, CropState.DISEASED, value - 130, Action.CURE);
+				}
+				if (value >= 134 && value <= 136)
+				{
+					// Diseased herbs[Cure,Inspect,Guide] 8144,8145,8146
+					return new PatchState(Produce.TARROMIN, CropState.DISEASED, value - 133, Action.CURE);
+				}
+				if (value >= 137 && value <= 139)
+				{
+					// Diseased herbs[Cure,Inspect,Guide] 8144,8145,8146
+					return new PatchState(Produce.HARRALANDER, CropState.DISEASED, value - 136, Action.CURE);
+				}
+				if (value >= 140 && value <= 142)
+				{
+					// Diseased herbs[Cure,Inspect,Guide] 8144,8145,8146
+					return new PatchState(Produce.RANARR, CropState.DISEASED, value - 139, Action.CURE);
+				}
+				if (value >= 143 && value <= 145)
+				{
+					// Diseased herbs[Cure,Inspect,Guide] 8144,8145,8146
+					return new PatchState(Produce.TOADFLAX, CropState.DISEASED, value - 142, Action.CURE);
+				}
+				if (value >= 146 && value <= 148)
+				{
+					// Diseased herbs[Cure,Inspect,Guide] 8144,8145,8146
+					return new PatchState(Produce.IRIT, CropState.DISEASED, value - 145, Action.CURE);
+				}
+				if (value >= 149 && value <= 151)
+				{
+					// Diseased herbs[Cure,Inspect,Guide] 8144,8145,8146
+					return new PatchState(Produce.AVANTOE, CropState.DISEASED, value - 148, Action.CURE);
+				}
+				if (value >= 152 && value <= 154)
+				{
+					// Diseased herbs[Cure,Inspect,Guide] 8144,8145,8146
+					return new PatchState(Produce.KWUARM, CropState.DISEASED, value - 151, Action.CURE);
+				}
+				if (value >= 155 && value <= 157)
+				{
+					// Diseased herbs[Cure,Inspect,Guide] 8144,8145,8146
+					return new PatchState(Produce.SNAPDRAGON, CropState.DISEASED, value - 154, Action.CURE);
+				}
+				if (value >= 158 && value <= 160)
+				{
+					// Diseased herbs[Cure,Inspect,Guide] 8144,8145,8146
+					return new PatchState(Produce.CADANTINE, CropState.DISEASED, value - 157, Action.CURE);
+				}
+				if (value >= 161 && value <= 163)
+				{
+					// Diseased herbs[Cure,Inspect,Guide] 8144,8145,8146
+					return new PatchState(Produce.LANTADYME, CropState.DISEASED, value - 160, Action.CURE);
+				}
+				if (value >= 164 && value <= 166)
+				{
+					// Diseased herbs[Cure,Inspect,Guide] 8144,8145,8146
+					return new PatchState(Produce.DWARF_WEED, CropState.DISEASED, value - 163, Action.CURE);
+				}
+				if (value >= 167 && value <= 169)
+				{
+					// Diseased herbs[Cure,Inspect,Guide] 8144,8145,8146
+					return new PatchState(Produce.TORSTOL, CropState.DISEASED, value - 166, Action.CURE);
+				}
+				if (value >= 170 && value <= 172)
+				{
+					// Dead herbs[Clear,Inspect,Guide] 8147,8148,8149
+					return new PatchState(Produce.ANYHERB, CropState.DEAD, value - 169, Action.CLEAR);
+				}
+				if (value >= 173 && value <= 175)
+				{
+					// Diseased herbs[Cure,Inspect,Guide] 8144,8145,8146
+					return new PatchState(Produce.HUASCA, CropState.DISEASED, value - 172, Action.CURE);
+				}
+				if (value >= 176 && value <= 191)
+				{
+					// Herb patch[Rake,Inspect,Guide] 8135,8135,8135,8135,8135,8135,...
+					return new PatchState(Produce.WEEDS, CropState.GROWING, 3, Action.RAKE);
+				}
+				if (value >= 192 && value <= 195)
+				{
+					// Goutweed[Inspect,Guide] 9044,9045,9046,9047
+					return new PatchState(Produce.GOUTWEED, CropState.GROWING, value - 192, Action.WAIT);
+				}
+				if (value >= 196 && value <= 197)
+				{
+					// Goutweed[Pick,Inspect,Guide] 9048,9048
+					return new PatchState(Produce.GOUTWEED, CropState.HARVESTABLE, 197 - value, Action.HARVEST);
+				}
+				if (value >= 198 && value <= 200)
+				{
+					// Diseased goutweed[Cure,Inspect,Guide] 9049,9050,9051
+					return new PatchState(Produce.GOUTWEED, CropState.DISEASED, value - 197, Action.CURE);
+				}
+				if (value >= 201 && value <= 203)
+				{
+					// Dead goutweed[Clear,Inspect,Guide] 9052,9053,9054
+					return new PatchState(Produce.GOUTWEED, CropState.DEAD, value - 200, Action.CLEAR);
+				}
+				if (value >= 204 && value <= 219)
+				{
+					// Herb patch[Rake,Inspect,Guide] 8135,8135,8135,8135,8135,8135,...
+					return new PatchState(Produce.WEEDS, CropState.GROWING, 3, Action.RAKE);
+				}
+				if (value >= 221 && value <= 255)
+				{
+					// Herb patch[Rake,Inspect,Guide] 8135,8135,8135,8135,8135,8135,...
+					return new PatchState(Produce.WEEDS, CropState.GROWING, 3, Action.RAKE);
+				}
+				return null;
+			}
+		},
+	TREE("Trees", true)
+		{
+			@Override
+			public PatchState forVarbitValue(int value)
+			{
+				if (value >= 0 && value <= 3)
+				{
+					// Tree patch[Rake,Inspect,Guide] 8395,8394,8393,8392
+					return new PatchState(Produce.WEEDS, CropState.GROWING, 3 - value, Action.RAKE);
+				}
+				if (value >= 4 && value <= 7)
+				{
+					// Tree patch[Rake,Inspect,Guide] 8395,8395,8395,8395
+					return new PatchState(Produce.WEEDS, CropState.GROWING, 3, Action.RAKE);
+				}
+				if (value >= 8 && value <= 11)
+				{
+					// Oak[Inspect,Guide] 8462,8463,8464,8465
+					return new PatchState(Produce.OAK, CropState.GROWING, value - 8, Action.WAIT);
+				}
+				if (value == 12)
+				{
+					// Oak[Check-health,Inspect,Guide] 8466
+					return new PatchState(Produce.OAK, CropState.GROWING, Produce.OAK.getStages() - 1, Action.CHECK_HEALTH);
+				}
+				if (value == 13)
+				{
+					// Oak[Chop down,Inspect,Guide] 8467
+					return new PatchState(Produce.OAK, CropState.HARVESTABLE, 0, Action.CHOP);
+				}
+				if (value == 14)
+				{
+					// Oak tree stump[Clear,Inspect,Guide] 8468
+					return new PatchState(Produce.OAK, CropState.HARVESTABLE, 0, Action.CLEAR);
+				}
+				if (value >= 15 && value <= 20)
+				{
+					// Willow Tree[Inspect,Guide] 8481,8482,8483,8484,8485,8486
+					return new PatchState(Produce.WILLOW, CropState.GROWING, value - 15, Action.WAIT);
+				}
+				if (value == 21)
+				{
+					// Willow Tree[Check-health,Inspect,Guide] 8487
+					return new PatchState(Produce.WILLOW, CropState.GROWING, Produce.WILLOW.getStages() - 1, Action.CHECK_HEALTH);
+				}
+				if (value == 22)
+				{
+					// Willow Tree[Chop down,Inspect,Guide] 8488
+					return new PatchState(Produce.WILLOW, CropState.HARVESTABLE, 0, Action.CHOP);
+				}
+				if (value == 23)
+				{
+					// Willow tree stump[Clear,Inspect,Guide] 8489
+					return new PatchState(Produce.WILLOW, CropState.HARVESTABLE, 0, Action.CLEAR);
+				}
+				if (value >= 24 && value <= 31)
+				{
+					// Maple Tree[Inspect,Guide] 8435,8436,8437,8438,8439,8440,...
+					return new PatchState(Produce.MAPLE, CropState.GROWING, value - 24, Action.WAIT);
+				}
+				if (value == 32)
+				{
+					// Maple Tree[Check-health,Inspect,Guide] 8443
+					return new PatchState(Produce.MAPLE, CropState.GROWING, Produce.MAPLE.getStages() - 1, Action.CHECK_HEALTH);
+				}
+				if (value == 33)
+				{
+					// Maple Tree[Chop down,Inspect,Guide] 8444
+					return new PatchState(Produce.MAPLE, CropState.HARVESTABLE, 0, Action.CHOP);
+				}
+				if (value == 34)
+				{
+					// Tree stump[Clear,Inspect,Guide] 8445
+					return new PatchState(Produce.MAPLE, CropState.HARVESTABLE, 0, Action.CLEAR);
+				}
+				if (value >= 35 && value <= 44)
+				{
+					// Yew sapling,Yew tree[Inspect,Guide] 8502,8503,8504,8505,8506,8507,...
+					return new PatchState(Produce.YEW, CropState.GROWING, value - 35, Action.WAIT);
+				}
+				if (value == 45)
+				{
+					// Yew tree[Check-health,Inspect,Guide] 8512
+					return new PatchState(Produce.YEW, CropState.GROWING, Produce.YEW.getStages() - 1, Action.CHECK_HEALTH);
+				}
+				if (value == 46)
+				{
+					// Yew tree[Chop down,Inspect,Guide] 8513
+					return new PatchState(Produce.YEW, CropState.HARVESTABLE, 0, Action.CHOP);
+				}
+				if (value == 47)
+				{
+					// Yew tree stump[Clear,Inspect,Guide] 8514
+					return new PatchState(Produce.YEW, CropState.HARVESTABLE, 0, Action.CLEAR);
+				}
+				if (value >= 48 && value <= 59)
+				{
+					// Magic Tree[Inspect,Guide] 8396,8397,8398,8399,8400,8401,...
+					return new PatchState(Produce.MAGIC, CropState.GROWING, value - 48, Action.WAIT);
+				}
+				if (value == 60)
+				{
+					// Magic Tree[Check-health,Inspect,Guide] 8408
+					return new PatchState(Produce.MAGIC, CropState.GROWING, Produce.MAGIC.getStages() - 1, Action.CHECK_HEALTH);
+				}
+				if (value == 61)
+				{
+					// Magic Tree[Chop down,Inspect,Guide] 8409
+					return new PatchState(Produce.MAGIC, CropState.HARVESTABLE, 0, Action.CHOP);
+				}
+				if (value == 62)
+				{
+					// Magic Tree Stump[Clear,Inspect,Guide] 8410
+					return new PatchState(Produce.MAGIC, CropState.HARVESTABLE, 0, Action.CLEAR);
+				}
+				if (value >= 63 && value <= 72)
+				{
+					// Tree patch[Rake,Inspect,Guide] 8395,8395,8395,8395,8395,8395,...
+					return new PatchState(Produce.WEEDS, CropState.GROWING, 3, Action.RAKE);
+				}
+				if (value >= 73 && value <= 75)
+				{
+					// Diseased Oak[Prune,Inspect,Guide] 8473,8474,8475
+					return new PatchState(Produce.OAK, CropState.DISEASED, value - 72, Action.PRUNE);
+				}
+				if (value == 77)
+				{
+					// Diseased Oak[Prune,Inspect,Guide] 8476
+					return new PatchState(Produce.OAK, CropState.DISEASED, 4, Action.PRUNE);
+				}
+				if (value >= 78 && value <= 79)
+				{
+					// Tree patch[Rake,Inspect,Guide] 8395,8395
+					return new PatchState(Produce.WEEDS, CropState.GROWING, 3, Action.RAKE);
+				}
+				if (value >= 80 && value <= 84)
+				{
+					// Diseased Willow[Prune,Inspect,Guide] 8490,8491,8492,8493,8494
+					return new PatchState(Produce.WILLOW, CropState.DISEASED, value - 79, Action.PRUNE);
+				}
+				if (value == 86)
+				{
+					// Diseased Willow[Prune,Inspect,Guide] 8495
+					return new PatchState(Produce.WILLOW, CropState.DISEASED, 6, Action.PRUNE);
+				}
+				if (value >= 87 && value <= 88)
+				{
+					// Tree patch[Rake,Inspect,Guide] 8395,8395
+					return new PatchState(Produce.WEEDS, CropState.GROWING, 3, Action.RAKE);
+				}
+				if (value >= 89 && value <= 95)
+				{
+					// Diseased Maple[Prune,Inspect,Guide] 8446,8447,8448,8449,8450,8451,...
+					return new PatchState(Produce.MAPLE, CropState.DISEASED, value - 88, Action.PRUNE);
+				}
+				if (value == 97)
+				{
+					// Diseased Maple[Prune,Inspect,Guide] 8453
+					return new PatchState(Produce.MAPLE, CropState.DISEASED, 8, Action.PRUNE);
+				}
+				if (value >= 98 && value <= 99)
+				{
+					// Tree patch[Rake,Inspect,Guide] 8395,8395
+					return new PatchState(Produce.WEEDS, CropState.GROWING, 3, Action.RAKE);
+				}
+				if (value >= 100 && value <= 108)
+				{
+					// Diseased Yew[Prune,Inspect,Guide] 8515,8516,8517,8518,8519,8520,...
+					return new PatchState(Produce.YEW, CropState.DISEASED, value - 99, Action.PRUNE);
+				}
+				if (value == 110)
+				{
+					// Diseased Yew[Prune,Inspect,Guide] 8524
+					return new PatchState(Produce.YEW, CropState.DISEASED, 10, Action.PRUNE);
+				}
+				if (value >= 111 && value <= 112)
+				{
+					// Tree patch[Rake,Inspect,Guide] 8395,8395
+					return new PatchState(Produce.WEEDS, CropState.GROWING, 3, Action.RAKE);
+				}
+				if (value >= 113 && value <= 123)
+				{
+					// Diseased Magic Tree[Prune,Inspect,Guide] 8411,8412,8413,8414,8415,8416,...
+					return new PatchState(Produce.MAGIC, CropState.DISEASED, value - 112, Action.PRUNE);
+				}
+				if (value == 125)
+				{
+					// Diseased Magic Tree[Prune,Inspect,Guide] 8422
+					return new PatchState(Produce.MAGIC, CropState.DISEASED, 12, Action.PRUNE);
+				}
+				if (value >= 126 && value <= 136)
+				{
+					// Tree patch[Rake,Inspect,Guide] 8395,8395,8395,8395,8395,8395,...
+					return new PatchState(Produce.WEEDS, CropState.GROWING, 3, Action.RAKE);
+				}
+				if (value >= 137 && value <= 139)
+				{
+					// Dead Oak[Clear,Inspect,Guide] 8477,8478,8479
+					return new PatchState(Produce.OAK, CropState.DEAD, value - 136, Action.CLEAR);
+				}
+				if (value == 141)
+				{
+					// Dead Oak[Clear,Inspect,Guide] 8480
+					return new PatchState(Produce.OAK, CropState.DEAD, 4, Action.CLEAR);
+				}
+				if (value >= 142 && value <= 143)
+				{
+					// Tree patch[Rake,Inspect,Guide] 8395,8395
+					return new PatchState(Produce.WEEDS, CropState.GROWING, 3, Action.RAKE);
+				}
+				if (value >= 144 && value <= 148)
+				{
+					// Dead Willow[Clear,Inspect,Guide] 8496,8497,8498,8499,8500
+					return new PatchState(Produce.WILLOW, CropState.DEAD, value - 143, Action.CLEAR);
+				}
+				if (value == 150)
+				{
+					// Dead Willow[Clear,Inspect,Guide] 8501
+					return new PatchState(Produce.WILLOW, CropState.DEAD, 6, Action.CLEAR);
+				}
+				if (value >= 151 && value <= 152)
+				{
+					// Tree patch[Rake,Inspect,Guide] 8395,8395
+					return new PatchState(Produce.WEEDS, CropState.GROWING, 3, Action.RAKE);
+				}
+				if (value >= 153 && value <= 159)
+				{
+					// Dead Maple[Clear,Inspect,Guide] 8454,8455,8456,8457,8458,8459,...
+					return new PatchState(Produce.MAPLE, CropState.DEAD, value - 152, Action.CLEAR);
+				}
+				if (value == 161)
+				{
+					// Dead Maple[Clear,Inspect,Guide] 8461
+					return new PatchState(Produce.MAPLE, CropState.DEAD, 8, Action.CLEAR);
+				}
+				if (value >= 162 && value <= 163)
+				{
+					// Tree patch[Rake,Inspect,Guide] 8395,8395
+					return new PatchState(Produce.WEEDS, CropState.GROWING, 3, Action.RAKE);
+				}
+				if (value >= 164 && value <= 172)
+				{
+					// Dead Yew[Clear,Inspect,Guide] 8525,8526,8527,8528,8529,8530,...
+					return new PatchState(Produce.YEW, CropState.DEAD, value - 163, Action.CLEAR);
+				}
+				if (value == 174)
+				{
+					// Dead Yew[Clear,Inspect,Guide] 8534
+					return new PatchState(Produce.YEW, CropState.DEAD, 10, Action.CLEAR);
+				}
+				if (value >= 175 && value <= 176)
+				{
+					// Tree patch[Rake,Inspect,Guide] 8395,8395
+					return new PatchState(Produce.WEEDS, CropState.GROWING, 3, Action.RAKE);
+				}
+				if (value >= 177 && value <= 187)
+				{
+					// Dead Magic Tree[Clear,Inspect,Guide] 8423,8424,8425,8426,8427,8428,...
+					return new PatchState(Produce.MAGIC, CropState.DEAD, value - 176, Action.CLEAR);
+				}
+				if (value == 189)
+				{
+					// Dead Magic Tree[Clear,Inspect,Guide] 8434
+					return new PatchState(Produce.MAGIC, CropState.DEAD, 12, Action.CLEAR);
+				}
+				if (value >= 190 && value <= 191)
+				{
+					// Tree patch[Rake,Inspect,Guide] 8395,8395
+					return new PatchState(Produce.WEEDS, CropState.GROWING, 3, Action.RAKE);
+				}
+				if (value >= 192 && value <= 197)
+				{
+					// Willow Tree[Chop down,Inspect,Guide] 8488,8488,8488,8488,8488,8488
+					return new PatchState(Produce.WILLOW, CropState.HARVESTABLE, 0, Action.CHOP);
+				}
+				if (value >= 198 && value <= 255)
+				{
+					// Tree patch[Rake,Inspect,Guide] 8395,8395,8395,8395,8395,8395,...
+					return new PatchState(Produce.WEEDS, CropState.GROWING, 3, Action.RAKE);
+				}
+				return null;
+			}
+		},
+	FRUIT_TREE("Fruit Trees", true)
+		{
+			@Override
+			public PatchState forVarbitValue(int value)
+			{
+				if (value >= 0 && value <= 3)
+				{
+					// Fruit Tree Patch[Rake,Inspect,Guide] 8050,8049,8048,8047
+					return new PatchState(Produce.WEEDS, CropState.GROWING, 3 - value, Action.RAKE);
+				}
+				if (value >= 4 && value <= 7)
+				{
+					// Fruit Tree Patch[Rake,Inspect,Guide] 8050,8050,8050,8050
+					return new PatchState(Produce.WEEDS, CropState.GROWING, 3, Action.RAKE);
+				}
+				if (value >= 8 && value <= 13)
+				{
+					// Apple tree[Inspect,Guide] 7935,7936,7937,7938,7939,7940
+					return new PatchState(Produce.APPLE, CropState.GROWING, value - 8, Action.WAIT);
+				}
+				if (value >= 14 && value <= 20)
+				{
+					// Apple tree[Chop-down,Inspect,Guide,Pick-apple] 7941,7942,7943,7944,7945,7946,...
+					return new PatchState(Produce.APPLE, CropState.HARVESTABLE, value - 14, Action.CHOP);
+				}
+				if (value >= 21 && value <= 26)
+				{
+					// Diseased apple tree[Prune,Inspect,Guide] 7949,7950,7951,7952,7953,7954
+					return new PatchState(Produce.APPLE, CropState.DISEASED, value - 20, Action.PRUNE);
+				}
+				if (value >= 27 && value <= 32)
+				{
+					// Dead apple tree[Clear,Inspect,Guide] 7955,7956,7957,7958,7959,7960
+					return new PatchState(Produce.APPLE, CropState.DEAD, value - 26, Action.CLEAR);
+				}
+				if (value == 33)
+				{
+					// Apple tree stump[Clear,Inspect,Guide] 7961
+					return new PatchState(Produce.APPLE, CropState.HARVESTABLE, 0, Action.CLEAR);
+				}
+				if (value == 34)
+				{
+					// Apple tree[Check-health,Inspect,Guide] 7948
+					return new PatchState(Produce.APPLE, CropState.GROWING, Produce.APPLE.getStages() - 1, Action.CHECK_HEALTH);
+				}
+				if (value >= 35 && value <= 40)
+				{
+					// Banana tree[Inspect,Guide] 7993,7994,7995,7996,7997,7998
+					return new PatchState(Produce.BANANA, CropState.GROWING, value - 35, Action.WAIT);
+				}
+				if (value >= 41 && value <= 47)
+				{
+					// Banana tree[Chop-down,Inspect,Guide,Pick-banana] 8000,8001,8002,8003,8004,8005,...
+					return new PatchState(Produce.BANANA, CropState.HARVESTABLE, value - 41, Action.CHOP);
+				}
+				if (value >= 48 && value <= 53)
+				{
+					// Diseased banana tree[Prune,Inspect,Guide] 8007,8008,8009,8010,8011,8012
+					return new PatchState(Produce.BANANA, CropState.DISEASED, value - 47, Action.PRUNE);
+				}
+				if (value >= 54 && value <= 59)
+				{
+					// Dead banana tree[Clear,Inspect,Guide] 8013,8014,8015,8016,8017,8018
+					return new PatchState(Produce.BANANA, CropState.DEAD, value - 53, Action.CLEAR);
+				}
+				if (value == 60)
+				{
+					// Banana tree stump[Clear,Inspect,Guide] 8019
+					return new PatchState(Produce.BANANA, CropState.HARVESTABLE, 0, Action.CLEAR);
+				}
+				if (value == 61)
+				{
+					// Banana tree[Check-health,Inspect,Guide] 7999
+					return new PatchState(Produce.BANANA, CropState.GROWING, Produce.BANANA.getStages() - 1, Action.CHECK_HEALTH);
+				}
+				if (value >= 62 && value <= 71)
+				{
+					// Fruit Tree Patch[Rake,Inspect,Guide] 8050,8050,8050,8050,8050,8050,...
+					return new PatchState(Produce.WEEDS, CropState.GROWING, 3, Action.RAKE);
+				}
+				if (value >= 72 && value <= 77)
+				{
+					// Orange tree[Inspect,Guide] 8051,8052,8053,8054,8055,8056
+					return new PatchState(Produce.ORANGE, CropState.GROWING, value - 72, Action.WAIT);
+				}
+				if (value >= 78 && value <= 84)
+				{
+					// Orange tree[Chop-down,Inspect,Guide,Pick-orange] 8057,8058,8059,8060,8061,8062,...
+					return new PatchState(Produce.ORANGE, CropState.HARVESTABLE, value - 78, Action.CHOP);
+				}
+				if (value >= 85 && value <= 89)
+				{
+					// Diseased orange tree[Prune,Inspect,Guide] 8065,8066,8067,8068,8069
+					return new PatchState(Produce.ORANGE, CropState.DISEASED, value - 84, Action.PRUNE);
+				}
+				if (value == 90)
+				{
+					// Diseased orange tree[Chop-down,Inspect,Guide] 8070
+					return new PatchState(Produce.ORANGE, CropState.DISEASED, 6, Action.CHOP);
+				}
+				if (value >= 91 && value <= 96)
+				{
+					// Dead orange tree[Clear,Inspect,Guide] 8071,8072,8073,8074,8075,8076
+					return new PatchState(Produce.ORANGE, CropState.DEAD, value - 90, Action.CLEAR);
+				}
+				if (value == 97)
+				{
+					// Orange tree stump[Clear,Inspect,Guide] 8077
+					return new PatchState(Produce.ORANGE, CropState.HARVESTABLE, 0, Action.CLEAR);
+				}
+				if (value == 98)
+				{
+					// Orange tree[Check-health,Inspect,Guide] 8064
+					return new PatchState(Produce.ORANGE, CropState.GROWING, Produce.ORANGE.getStages() - 1, Action.CHECK_HEALTH);
+				}
+				if (value >= 99 && value <= 104)
+				{
+					// Curry tree[Inspect,Guide] 8020,8021,8022,8023,8024,8025
+					return new PatchState(Produce.CURRY, CropState.GROWING, value - 99, Action.WAIT);
+				}
+				if (value >= 105 && value <= 111)
+				{
+					// Curry tree[Chop-down,Inspect,Guide,Pick-leaf] 8026,8027,8028,8029,8030,8031,...
+					return new PatchState(Produce.CURRY, CropState.HARVESTABLE, value - 105, Action.CHOP);
+				}
+				if (value >= 112 && value <= 117)
+				{
+					// Diseased curry tree[Prune,Inspect,Guide] 8034,8035,8036,8037,8038,8039
+					return new PatchState(Produce.CURRY, CropState.DISEASED, value - 111, Action.PRUNE);
+				}
+				if (value >= 118 && value <= 123)
+				{
+					// Dead curry tree[Clear,Inspect,Guide] 8040,8041,8042,8043,8044,8045
+					return new PatchState(Produce.CURRY, CropState.DEAD, value - 117, Action.CLEAR);
+				}
+				if (value == 124)
+				{
+					// Curry tree stump[Clear,Inspect,Guide] 8046
+					return new PatchState(Produce.CURRY, CropState.HARVESTABLE, 0, Action.CLEAR);
+				}
+				if (value == 125)
+				{
+					// Curry tree[Check-health,Inspect,Guide] 8033
+					return new PatchState(Produce.CURRY, CropState.GROWING, Produce.CURRY.getStages() - 1, Action.CHECK_HEALTH);
+				}
+				if (value >= 126 && value <= 135)
+				{
+					// Fruit Tree Patch[Rake,Inspect,Guide] 8050,8050,8050,8050,8050,8050,...
+					return new PatchState(Produce.WEEDS, CropState.GROWING, 3, Action.RAKE);
+				}
+				if (value >= 136 && value <= 141)
+				{
+					// Pineapple plant[Inspect,Guide] 7966,7967,7968,7969,7970,7971
+					return new PatchState(Produce.PINEAPPLE, CropState.GROWING, value - 136, Action.WAIT);
+				}
+				if (value >= 142 && value <= 148)
+				{
+					// Pineapple plant[Chop down,Inspect,Guide,Pick-pineapple] 7972,7973,7974,7975,7976,7977,...
+					return new PatchState(Produce.PINEAPPLE, CropState.HARVESTABLE, value - 142, Action.CHOP);
+				}
+				if (value >= 149 && value <= 154)
+				{
+					// Diseased pineapple plant[Prune,Inspect,Guide] 7980,7981,7982,7983,7984,7985
+					return new PatchState(Produce.PINEAPPLE, CropState.DISEASED, value - 148, Action.PRUNE);
+				}
+				if (value >= 155 && value <= 160)
+				{
+					// Dead pineapple plant[Clear,Inspect,Guide] 7986,7987,7988,7989,7990,7991
+					return new PatchState(Produce.PINEAPPLE, CropState.DEAD, value - 154, Action.CLEAR);
+				}
+				if (value == 161)
+				{
+					// Pineapple plant stump[Clear,Inspect,Guide] 7992
+					return new PatchState(Produce.PINEAPPLE, CropState.HARVESTABLE, 0, Action.CLEAR);
+				}
+				if (value == 162)
+				{
+					// Pineapple plant[Check-health,Inspect,Guide] 7979
+					return new PatchState(Produce.PINEAPPLE, CropState.GROWING, Produce.PINEAPPLE.getStages() - 1, Action.CHECK_HEALTH);
+				}
+				if (value >= 163 && value <= 168)
+				{
+					// Papaya tree[Inspect,Guide] 8105,8106,8107,8108,8109,8110
+					return new PatchState(Produce.PAPAYA, CropState.GROWING, value - 163, Action.WAIT);
+				}
+				if (value >= 169 && value <= 175)
+				{
+					// Papaya tree[Chop-down,Inspect,Guide,Pick-fruit] 8111,8112,8113,8114,8115,8116,...
+					return new PatchState(Produce.PAPAYA, CropState.HARVESTABLE, value - 169, Action.CHOP);
+				}
+				if (value >= 176 && value <= 181)
+				{
+					// Diseased papaya tree[Prune,Inspect,Guide] 8119,8120,8121,8122,8123,8124
+					return new PatchState(Produce.PAPAYA, CropState.DISEASED, value - 175, Action.PRUNE);
+				}
+				if (value >= 182 && value <= 187)
+				{
+					// Dead papaya tree[Clear,Inspect,Guide] 8125,8126,8127,8128,8129,8130
+					return new PatchState(Produce.PAPAYA, CropState.DEAD, value - 181, Action.CLEAR);
+				}
+				if (value == 188)
+				{
+					// Papaya tree stump[Clear,Inspect,Guide] 8131
+					return new PatchState(Produce.PAPAYA, CropState.HARVESTABLE, 0, Action.CLEAR);
+				}
+				if (value == 189)
+				{
+					// Papaya tree[Check-health,Inspect,Guide] 8118
+					return new PatchState(Produce.PAPAYA, CropState.GROWING, Produce.PAPAYA.getStages() - 1, Action.CHECK_HEALTH);
+				}
+				if (value >= 190 && value <= 199)
+				{
+					// Fruit Tree Patch[Rake,Inspect,Guide] 8050,8050,8050,8050,8050,8050,...
+					return new PatchState(Produce.WEEDS, CropState.GROWING, 3, Action.RAKE);
+				}
+				if (value >= 200 && value <= 205)
+				{
+					// Palm tree[Inspect,Guide] 8078,8079,8080,8081,8082,8083
+					return new PatchState(Produce.PALM, CropState.GROWING, value - 200, Action.WAIT);
+				}
+				if (value >= 206 && value <= 212)
+				{
+					// Palm tree[Chop-down,Inspect,Guide,Pick-coconut] 8084,8085,8086,8087,8088,8089,...
+					return new PatchState(Produce.PALM, CropState.HARVESTABLE, value - 206, Action.CHOP);
+				}
+				if (value >= 213 && value <= 218)
+				{
+					// Diseased palm tree[Prune,Inspect,Guide] 8092,8093,8094,8095,8096,8097
+					return new PatchState(Produce.PALM, CropState.DISEASED, value - 212, Action.PRUNE);
+				}
+				if (value >= 219 && value <= 224)
+				{
+					// Dead palm tree[Clear,Inspect,Guide] 8098,8099,8100,8101,8102,8103
+					return new PatchState(Produce.PALM, CropState.DEAD, value - 218, Action.CLEAR);
+				}
+				if (value == 225)
+				{
+					// Palm tree stump[Clear,Inspect,Guide] 8104
+					return new PatchState(Produce.PALM, CropState.HARVESTABLE, 0, Action.CLEAR);
+				}
+				if (value == 226)
+				{
+					// Palm tree[Check-health,Inspect,Guide] 8091
+					return new PatchState(Produce.PALM, CropState.GROWING, Produce.PALM.getStages() - 1, Action.CHECK_HEALTH);
+				}
+				if (value >= 227 && value <= 232)
+				{
+					// Dragonfruit tree[Inspect,Guide] 34008,34009,34010,34011,34012,34013
+					return new PatchState(Produce.DRAGONFRUIT, CropState.GROWING, value - 227, Action.WAIT);
+				}
+				if (value >= 233 && value <= 239)
+				{
+					// Dragonfruit tree[Chop down,Inspect,Guide,Pick-dragonfruit] 34014,34015,34016,34017,34018,34019,...
+					return new PatchState(Produce.DRAGONFRUIT, CropState.HARVESTABLE, value - 233, Action.CHOP);
+				}
+				if (value >= 240 && value <= 245)
+				{
+					// Diseased dragonfruit plant[Prune,Inspect,Guide] 34022,34023,34024,34025,34026,34027
+					return new PatchState(Produce.DRAGONFRUIT, CropState.DISEASED, value - 239, Action.PRUNE);
+				}
+				if (value >= 246 && value <= 251)
+				{
+					// Dead dragonfruit plant[Clear,Inspect,Guide] 34028,34029,34030,34031,34032,34033
+					return new PatchState(Produce.DRAGONFRUIT, CropState.DEAD, value - 245, Action.CLEAR);
+				}
+				if (value == 252)
+				{
+					// Dragonfruit tree stump[Clear,Inspect,Guide] 34034
+					return new PatchState(Produce.DRAGONFRUIT, CropState.HARVESTABLE, 0, Action.CLEAR);
+				}
+				if (value == 253)
+				{
+					// Dragonfruit tree[Check-health,Inspect,Guide] 34021
+					return new PatchState(Produce.DRAGONFRUIT, CropState.GROWING, Produce.DRAGONFRUIT.getStages() - 1, Action.CHECK_HEALTH);
+				}
+				if (value >= 254 && value <= 255)
+				{
+					// Fruit Tree Patch[Rake,Inspect,Guide] 8050,8050
+					return new PatchState(Produce.WEEDS, CropState.GROWING, 3, Action.RAKE);
+				}
+				return null;
+			}
 		};
 
 	/** The patch's state for a varbit value, or null for a value the game never sends. */

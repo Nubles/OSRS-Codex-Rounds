@@ -182,20 +182,38 @@ public class RoundsPanel extends PluginPanel
 			{
 				list.add(note("Open your bank once so Rounds can plan with the teleports and supplies you own."));
 			}
-			if (view.slots > Supplies.PACK_SLOTS)
+			if (route.tripCount() > 1)
 			{
-				list.add(note("This takes about " + view.slots + " slots, more than a full pack. Take what the first stops need, "
-					+ "then stop at a bank on the way, or turn some chores off for this round."));
-			}
-			Need.Kind kind = null;
-			for (Need n : route.getPulls())
-			{
-				if (n.getKind() != kind)
+				list.add(note("Too much for one pack, so this round banks " + (route.tripCount() - 1)
+					+ (route.tripCount() == 2 ? " time" : " times") + " on the way. Each trip's pull list is below."));
+				for (int t = 0; t < route.tripCount(); t++)
 				{
-					kind = n.getKind();
-					list.add(sub(kind.getLabel()));
+					int first = route.tripStart(t) + 1;
+					int last = t + 1 < route.tripCount() ? route.tripStart(t + 1) : route.getStops().size();
+					list.add(sub("Trip " + (t + 1) + " (stops " + first + (last > first ? " to " + last : "") + ")"));
+					for (Need n : route.getTripPulls(t))
+					{
+						list.add(pullRow(n));
+					}
 				}
-				list.add(pullRow(n));
+			}
+			else
+			{
+				if (view.slots > Supplies.PACK_SLOTS)
+				{
+					list.add(note("This takes about " + view.slots + " slots, more than a full pack. Take what the first stops need, "
+						+ "then stop at a bank on the way, or turn some chores off for this round."));
+				}
+				Need.Kind kind = null;
+				for (Need n : route.getPulls())
+				{
+					if (n.getKind() != kind)
+					{
+						kind = n.getKind();
+						list.add(sub(kind.getLabel()));
+					}
+					list.add(pullRow(n));
+				}
 			}
 			if (!route.getPulls().isEmpty())
 			{
