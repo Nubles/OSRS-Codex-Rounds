@@ -1,5 +1,6 @@
 package com.codex.rounds;
 
+import com.codex.rounds.notes.FieldNotes;
 import com.codex.rounds.core.Ability;
 import com.codex.rounds.core.BankTab;
 import com.codex.rounds.core.Board;
@@ -41,6 +42,7 @@ import com.codex.rounds.ui.RoundsPanel;
 import com.codex.rounds.ui.Sigil;
 import com.codex.rounds.ui.View;
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.inject.Provides;
 import java.time.Instant;
@@ -177,6 +179,9 @@ public class CodexRoundsPlugin extends Plugin
 	@Inject
 	private CodexRoundsConfig config;
 
+	/** The optional local record of what the plugin read and decided. */
+	private FieldNotes notes;
+
 	@Inject
 	private BankTagsService bankTags;
 
@@ -232,6 +237,11 @@ public class CodexRoundsPlugin extends Plugin
 	@Override
 	protected void startUp()
 	{
+		notes = new FieldNotes(this::getPluginDirectory, gson);
+		if (config.fieldNotes())
+		{
+			notes.open();
+		}
 		ItemIcons icons = (itemId, onLoaded) ->
 		{
 			AsyncBufferedImage image = itemManager.getImage(itemId);
@@ -265,6 +275,11 @@ public class CodexRoundsPlugin extends Plugin
 	@Override
 	protected void shutDown()
 	{
+		if (notes != null)
+		{
+			notes.shutdown();
+			notes = null;
+		}
 		overlayManager.remove(plaque);
 		overlayManager.remove(targetOverlay);
 		overlayManager.remove(itemHighlight);
@@ -340,9 +355,83 @@ public class CodexRoundsPlugin extends Plugin
 		refresh(true);
 	}
 
+	/** The last route and step put in the field notes, so only changes are written. */
+	private String notedRoute;
+	private String notedStep;
+
+	private void noteRoute()
+	{
+		if (!notes.isOpen() || route == null)
+		{
+			return;
+		}
+		JsonObject n = new JsonObject();
+		com.google.gson.JsonArray stops = new com.google.gson.JsonArray();
+		for (Stop st : route.getStops())
+		{
+			JsonObject o = new JsonObject();
+			o.addProperty("place", st.getPlace().name());
+			o.addProperty("tasks", st.getTasks().size());
+			o.addProperty("seconds", st.getSeconds());
+			stops.add(o);
+		}
+		n.add("stops", stops);
+		n.addProperty("trips", route.tripCount());
+		n.addProperty("pulls", route.getPulls().size());
+		n.addProperty("slots", Supplies.slotsEstimate(route.getPulls()));
+		n.addProperty("started", progress.isStarted());
+		String key = n.toString();
+		if (!key.equals(notedRoute))
+		{
+			notedRoute = key;
+			notes.note("route", n);
+		}
+	}
+
+	private void noteStep(Step next)
+	{
+		if (!notes.isOpen() || next == null)
+		{
+			return;
+		}
+		String key = next.getKind() + "|" + next.getTitle() + "|" + next.getDetail() + "|" + next.getStopIndex();
+		if (key.equals(notedStep))
+		{
+			return;
+		}
+		notedStep = key;
+		JsonObject n = new JsonObject();
+		n.addProperty("kind", String.valueOf(next.getKind()));
+		n.addProperty("title", next.getTitle());
+		n.addProperty("detail", next.getDetail());
+		n.addProperty("stop", next.getStopIndex());
+		n.addProperty("done", next.getDone());
+		n.addProperty("total", next.getTotal());
+		Point at = here();
+		if (at != null)
+		{
+			n.addProperty("x", at.getX());
+			n.addProperty("y", at.getY());
+			n.addProperty("plane", at.getPlane());
+		}
+		notes.note("step", n);
+	}
+
 	@Subscribe
 	public void onConfigChanged(ConfigChanged event)
 	{
+		if (CodexRoundsConfig.GROUP.equals(event.getGroup()) && "fieldNotes".equals(event.getKey()) && notes != null)
+		{
+			if (config.fieldNotes())
+			{
+				notes.open();
+			}
+			else
+			{
+				notes.close();
+			}
+			return;
+		}
 		if (!CodexRoundsConfig.GROUP.equals(event.getGroup()))
 		{
 			return;
@@ -478,6 +567,18 @@ public class CodexRoundsPlugin extends Plugin
 			{
 				PatchState before = old == null ? null : spot.getKind().forVarbitValue(old.getValue());
 				memory.put(spot, new Seen(v, now));
+				if (notes.isOpen())
+				{
+					JsonObject n = new JsonObject();
+					n.addProperty("spot", spot.name());
+					n.addProperty("varbit", spot.getVarbit());
+					n.addProperty("value", v);
+					n.addProperty("was", old == null ? -1 : old.getValue());
+					n.addProperty("state", String.valueOf(now0.getCropState()));
+					n.addProperty("stage", now0.getStage());
+					n.addProperty("produce", String.valueOf(now0.getProduce()));
+					notes.note("patch", n);
+				}
 				if ((before == null || before.isEmpty()) && !now0.isEmpty() && now0.getCropState() == CropState.GROWING && now0.getStage() == 0)
 				{
 					progress.planted(spot, now);
@@ -798,6 +899,7 @@ public class CodexRoundsPlugin extends Plugin
 				replan = false;
 			}
 			dirty = false;
+			noteRoute();
 			notifyIfReady();
 		}
 
@@ -809,6 +911,7 @@ public class CodexRoundsPlugin extends Plugin
 		Guide.World world = new Guide.World(here(), readings(now), dailyMap, kingdom, carried, ability, now);
 		Step next = progress.isStarted() ? Guide.next(route, world, progress, roundSettings()) : Guide.next(route, world, new Progress(), settings);
 		step = next;
+		noteStep(next);
 
 		if (progress.isStarted() && route.isEmpty())
 		{

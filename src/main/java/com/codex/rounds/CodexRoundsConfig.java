@@ -810,4 +810,24 @@ public interface CodexRoundsConfig extends Config
 	{
 		return Herb.BEST;
 	}
+
+	@ConfigSection(
+		name = "Field notes",
+		description = "A local record for checking the plugin's guesses",
+		position = 99,
+		closedByDefault = true
+	)
+	String FIELD_NOTES = "fieldNotesSection";
+
+	@ConfigItem(
+		keyName = "fieldNotes",
+		name = "Keep field notes",
+		description = "Write what Rounds reads and decides to its folder in .runelite/plugin-data on your computer, for checking its guesses; nothing is sent anywhere",
+		section = FIELD_NOTES,
+		position = 0
+	)
+	default boolean fieldNotes()
+	{
+		return false;
+	}
 }
