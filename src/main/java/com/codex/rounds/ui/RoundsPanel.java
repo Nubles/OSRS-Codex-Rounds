@@ -444,12 +444,12 @@ public class RoundsPanel extends PluginPanel
 		}
 		if (dailies.isEmpty())
 		{
-			list.add(new SectionHeader("Dailies"));
-			list.add(note("Dailies show once you log in."));
+			list.add(new SectionHeader("Dailies and weeklies"));
+			list.add(note("Dailies and Tears of Guthix show once you log in."));
 		}
 		else
 		{
-			addGroup(list, "Dailies", dailies);
+			addGroup(list, "Dailies and weeklies", dailies);
 		}
 		list.add(new SectionHeader("Kingdom of Miscellania"));
 		list.add(kingdomCard(b.getKingdom(), kingdom));
@@ -505,7 +505,15 @@ public class RoundsPanel extends PluginPanel
 				badge = "Unseen";
 				break;
 			case DONE:
-				badge = e.getType() == Board.Type.DAILY ? "Claimed" : "Done";
+				if (e.getType() == Board.Type.DAILY && !e.getDaily().resetsDaily() && e.getDaily().isRemembered())
+				{
+					// Weekly: count down to Juna's day, or say what she is waiting for.
+					badge = e.getReadyAt() > view.now ? Format.shortDuration(e.getReadyAt() - view.now) : "Waiting";
+				}
+				else
+				{
+					badge = e.getType() == Board.Type.DAILY ? "Claimed" : "Done";
+				}
 				break;
 			case LOCKED:
 				badge = "Locked";

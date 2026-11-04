@@ -215,6 +215,10 @@ public enum Place
 		ring("AIS", 1429, 3324),
 		item("Quetzal whistle: Auburnvale", 1411, 3361, QUETZAL_WHISTLE),
 		directions("Quetzal to Auburnvale and walk west", 1367, 3322, 150)),
+	/** Games necklace landing from the Shortest Path plugin's transport data (Skretzo, BSD 2-Clause). */
+	CHASM_OF_TEARS("Chasm of Tears", "Juna, deep in the Lumbridge Swamp Caves", Point.of(3245, 9500, 2), 30,
+		item("Games necklace: Tears of Guthix", 3245, 9500, GAMES_NECKLACE),
+		directions("Through the Lumbridge Swamp Caves (bring a light source)", 3245, 9500, 300)),
 	MAGE_ARENA("Mage Arena bank", "Lundail, deep in the Wilderness", Point.of(2535, 4714), 25,
 		directions("Mage Arena lever, then the sparkling pool", 2535, 4714, 240));
 

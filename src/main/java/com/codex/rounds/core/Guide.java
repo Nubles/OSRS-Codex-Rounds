@@ -71,7 +71,8 @@ public final class Guide
 		{
 			case DAILY:
 				DailyState d = w.dailies.get(t.getDaily());
-				return d != null && !d.isClaimable();
+				// A weekly Rounds has not seen yet stays on the round until Juna lets the player in or says when.
+				return d != null && !d.isClaimable() && !d.isUnseen();
 			case KINGDOM:
 				return w.kingdom != null && !w.kingdom.needsVisit(settings.getApprovalTarget(), settings.getCofferTarget(), settings.getTopUpSlack());
 			default:
@@ -381,7 +382,8 @@ public final class Guide
 				{
 					items.add(ds.getNeed().getItemId());
 				}
-				return new Step(Step.Kind.TASK, d.getAction(), t.getDetail(), Step.Target.npc(near, d.getNpcs()), items, near, t, current, done, total);
+				Step.Target who = d.getObjects().length > 0 ? Step.Target.object(near, d.getObjects()) : Step.Target.npc(near, d.getNpcs());
+				return new Step(Step.Kind.TASK, d.getAction(), t.getDetail(), who, items, near, t, current, done, total);
 			case KINGDOM:
 				return kingdomStep(t, w, current, done, total);
 			default:

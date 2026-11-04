@@ -2,6 +2,7 @@ package com.codex.rounds.core;
 
 import net.runelite.api.gameval.ItemID;
 import net.runelite.api.gameval.NpcID;
+import net.runelite.api.gameval.ObjectID;
 import net.runelite.api.gameval.VarPlayerID;
 import net.runelite.api.gameval.VarbitID;
 
@@ -23,6 +24,11 @@ public enum Daily
 	BERT("Bert's sand", Place.YANILLE, ItemID.BUCKET_SAND, "Ask Bert for your sand", NpcID.HANDSAND_BERT_2OPS, NpcID.HANDSAND_BERT_1OP, NpcID.HANDSAND_BERT),
 	HERB_BOXES("Herb boxes", Place.NIGHTMARE_ZONE, ItemID.NZONE_HERBBOX, "Buy herb boxes from Dominic Onion", NpcID.NZONE_HOST),
 	LUNDAIL("Lundail's runes", Place.MAGE_ARENA, ItemID.DEATHRUNE, "Claim runes from Lundail", NpcID.MAGEARENA_RUNESHOP),
+	/**
+	 * Weekly, not daily: Juna lets the player in seven days after the last visit. Its standing comes
+	 * from {@link Tears}, which remembers the visits; the game has no value saying it is open.
+	 */
+	TEARS("Tears of Guthix", Place.CHASM_OF_TEARS, ItemID.TOG_BOWL, "Tell Juna a story"),
 	/** Not daily, but a chore of the same shape: a talk at a place, ready again whenever a contract is done. */
 	CONTRACT("Farming contract", Place.FARMING_GUILD, ItemID.SEEDBOX, "Talk to Guildmaster Jane about your contract",
 		NpcID.FARMING_GUILD_MASTER, NpcID.FARMING_GUILD_MASTER_1OP, NpcID.FARMING_GUILD_MASTER_2OP);
@@ -91,10 +97,22 @@ public enum Daily
 		return false;
 	}
 
-	/** Whether it comes back at the daily reset; a contract only comes back when it is done. */
+	/** Whether it comes back at the daily reset; a contract only comes back when it is done, Tears of Guthix weekly. */
 	public boolean resetsDaily()
 	{
-		return this != CONTRACT;
+		return this != CONTRACT && this != TEARS;
+	}
+
+	/** Whether its standing comes from what Rounds remembers ({@link Tears}) rather than from game values. */
+	public boolean isRemembered()
+	{
+		return this == TEARS;
+	}
+
+	/** Objects to talk to instead of NPCs: Juna is scenery. */
+	public int[] getObjects()
+	{
+		return this == TEARS ? new int[]{ObjectID.TOG_JUNA_1OP, ObjectID.TOG_JUNA_2OPS, ObjectID.TOG_JUNA} : new int[0];
 	}
 
 	/** Whether the account has earned this daily at all. */

@@ -34,6 +34,9 @@ public final class Memory
 	public boolean kingdomQuest;
 	public boolean royalTrouble;
 
+	/** Tears of Guthix visits as Rounds saw them; null in saves from before it was tracked. */
+	public Tears.Record tears;
+
 	/** Daily name to what was last seen of it. */
 	public Map<String, DailySnap> dailies = new HashMap<>();
 
@@ -142,6 +145,14 @@ public final class Memory
 		}
 		for (Daily d : Daily.values())
 		{
+			if (d.isRemembered())
+			{
+				if (tears != null)
+				{
+					out.add(Tears.state(tears, now));
+				}
+				continue;
+			}
 			DailySnap snap = dailies.get(d.name());
 			if (snap == null)
 			{
@@ -174,6 +185,16 @@ public final class Memory
 			out.add(reset ? st.afterReset() : st);
 		}
 		return out;
+	}
+
+	/** The Tears of Guthix record, made on first use. */
+	public Tears.Record tears()
+	{
+		if (tears == null)
+		{
+			tears = new Tears.Record();
+		}
+		return tears;
 	}
 
 	public void snapDaily(DailyState st, long now)
