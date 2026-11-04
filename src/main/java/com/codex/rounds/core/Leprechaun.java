@@ -15,7 +15,7 @@ import net.runelite.api.gameval.VarbitID;
 public final class Leprechaun
 {
 	/** Stops where a tool leprechaun stands by the patches, so stored tools can be taken out there. */
-	public static final Set<Place> PLACES = EnumSet.of(Place.FARMING_GUILD, Place.FOSSIL_ISLAND, Place.UNDERWATER,
+	public static final Set<Place> PLACES = EnumSet.of(Place.FARMING_GUILD, Place.FOSSIL_ISLAND, Place.UNDERWATER, Place.CORAL_NURSERY,
 		Place.TAI_BWO_WANNAI, Place.PRIFDDINAS, Place.HOSIDIUS, Place.ETCETERIA, Place.BRIMHAVEN, Place.PORT_SARIM,
 		Place.RIMMINGTON, Place.ARDOUGNE_MONASTERY, Place.CHAMPIONS_GUILD, Place.AL_KHARID, Place.DRAYNOR_MANOR,
 		Place.CANIFIS, Place.KASTORI, Place.AUBURNVALE);

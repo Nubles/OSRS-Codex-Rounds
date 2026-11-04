@@ -131,6 +131,12 @@ public final class Ability
 		return ironman;
 	}
 
+	/** Whether the account has the unlock; before quests were ever read, it is assumed. */
+	public boolean has(Unlock unlock)
+	{
+		return unlock == null || !unlocksKnown || unlocks.contains(unlock);
+	}
+
 	/** Whether a way of travelling is open to this account. */
 	public boolean canUse(Leg leg)
 	{

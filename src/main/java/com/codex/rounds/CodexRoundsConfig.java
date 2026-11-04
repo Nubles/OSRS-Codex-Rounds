@@ -317,6 +317,18 @@ public interface CodexRoundsConfig extends Config
 	}
 
 	@ConfigItem(
+		keyName = "coral",
+		name = "Coral",
+		description = "The two coral nurseries beneath the Great Conch (Sailing; needs Troubled Tortugans)",
+		section = CHORES,
+		position = 10
+	)
+	default boolean coral()
+	{
+		return true;
+	}
+
+	@ConfigItem(
 		keyName = "zaff",
 		name = "Zaff's battlestaves",
 		description = "Buy your daily battlestaves from Zaff in Varrock (needs the Varrock diary)",

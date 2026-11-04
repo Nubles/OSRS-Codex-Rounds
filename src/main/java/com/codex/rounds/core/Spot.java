@@ -43,6 +43,12 @@ public enum Spot
 	CALQUAT_CONCH("The Great Conch", Place.GREAT_CONCH, Group.TREES, PatchKind.CALQUAT, VarbitID.FARMING_TRANSMIT_C,
 		Point.of(3128, 2405), NpcID.FARMING_GARDENER_CALQUAT_3, Bounds.ANY,
 		12581, 12325, 12326, 12327, 12580, 12582, 12583, 12836, 12837, 12838, 12839, 13092, 13093, 13194),
+	CORAL_EAST("Great Conch, east", Place.CORAL_NURSERY, Group.CORAL, PatchKind.CORAL, VarbitID.FARMING_TRANSMIT_A,
+		Point.of(3296, 8861), NpcID.TORTUGAN_CORAL_FARMER, Bounds.ANY,
+		12581, 12325, 12326, 12327, 12580, 12582, 12583, 12836, 12837, 12838, 12839, 13092, 13093, 13194),
+	CORAL_WEST("Great Conch, west", Place.CORAL_NURSERY, Group.CORAL, PatchKind.CORAL, VarbitID.FARMING_TRANSMIT_B,
+		Point.of(3296, 8861), NpcID.TORTUGAN_CORAL_FARMER, Bounds.ANY,
+		12581, 12325, 12326, 12327, 12580, 12582, 12583, 12836, 12837, 12838, 12839, 13092, 13093, 13194),
 	CELASTRUS_GUILD("Farming Guild", Place.FARMING_GUILD, Group.TREES, PatchKind.CELASTRUS, VarbitID.FARMING_TRANSMIT_L,
 		Point.of(1244, 3750), NpcID.FARMING_GARDENER_FARMGUILD_CELASTRUS, Bounds.ANY, -1),
 	REDWOOD_GUILD("Farming Guild", Place.FARMING_GUILD, Group.TREES, PatchKind.REDWOOD, VarbitID.FARMING_TRANSMIT_I,
@@ -95,6 +101,7 @@ public enum Spot
 		HARDWOODS("Hardwood trees"),
 		TREES("Special trees"),
 		SPIRIT_TREES("Spirit trees"),
+		CORAL("Coral"),
 		PATCHES("Special patches");
 
 		private final String label;
@@ -225,6 +232,8 @@ public enum Spot
 				return "Anima";
 			case HESPORI:
 				return "Hespori";
+			case CORAL:
+				return "Coral";
 			default:
 				return kind.name();
 		}
@@ -270,6 +279,12 @@ public enum Spot
 	public int getGardener()
 	{
 		return gardener;
+	}
+
+	/** The quest or unlock the patch waits behind, or null when it needs only a level. */
+	public Unlock requires()
+	{
+		return kind == PatchKind.CORAL ? Unlock.TROUBLED_TORTUGANS : null;
 	}
 
 	/** Whether this spot's variable can be trusted from where the player stands. */

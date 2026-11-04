@@ -247,7 +247,11 @@ public final class Board
 			else if (r.getStatus() == Status.UNSEEN)
 			{
 				int need = requiredLevel(spot);
-				if (spot.isBirdhouse() ? ability.getHunter() < need : ability.getFarming() < need)
+				if (!ability.has(spot.requires()))
+				{
+					r = r.as(Status.LOCKED, unlockHint(spot.requires()));
+				}
+				else if (spot.isBirdhouse() ? ability.getHunter() < need : ability.getFarming() < need)
 				{
 					r = r.as(Status.LOCKED, "Needs " + need + (spot.isBirdhouse() ? " Hunter" : " Farming"));
 				}
@@ -336,6 +340,11 @@ public final class Board
 			default:
 				return "Locked";
 		}
+	}
+
+	static String unlockHint(Unlock u)
+	{
+		return u == Unlock.TROUBLED_TORTUGANS ? "Needs Troubled Tortugans" : "Locked";
 	}
 
 	/** The lowest level that opens a spot. */

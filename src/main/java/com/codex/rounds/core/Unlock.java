@@ -6,6 +6,8 @@ public enum Unlock
 	FREMENNIK_TRIALS,
 	CHILDREN_OF_THE_SUN,
 	GREAT_CONCH,
+	/** Troubled Tortugans finished: Chet lets the player use the coral nurseries. */
+	TROUBLED_TORTUGANS,
 	THRONE_OF_MISCELLANIA,
 	SONG_OF_THE_ELVES,
 	BONE_VOYAGE,
