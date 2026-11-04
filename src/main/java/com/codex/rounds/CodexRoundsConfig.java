@@ -879,6 +879,37 @@ public interface CodexRoundsConfig extends Config
 	}
 
 	@ConfigSection(
+		name = "Herb ledger",
+		description = "What your own herb patches give you: herbs picked per patch against the wiki's expectation, profit per run and which herb pays best",
+		position = 7
+	)
+	String HERB_LEDGER = "herbLedgerSection";
+
+	@ConfigItem(
+		keyName = "herbLedger",
+		name = "Keep a herb ledger",
+		description = "Count the herbs you pick from each herb patch, with its compost, disease and death, and show your yield and profit on the board",
+		section = HERB_LEDGER,
+		position = 0
+	)
+	default boolean herbLedger()
+	{
+		return true;
+	}
+
+	@ConfigItem(
+		keyName = "herbChat",
+		name = "Harvest line in chat",
+		description = "When a herb patch is picked clean or dies, post the herbs it gave, the wiki's expectation and what it made after seed and compost",
+		section = HERB_LEDGER,
+		position = 1
+	)
+	default boolean herbChat()
+	{
+		return true;
+	}
+
+	@ConfigSection(
 		name = "Field notes",
 		description = "A local record for checking the plugin's guesses",
 		position = 99,

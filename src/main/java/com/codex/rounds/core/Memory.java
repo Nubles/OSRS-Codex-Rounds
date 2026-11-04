@@ -40,6 +40,9 @@ public final class Memory
 	/** Sulliuscep runs on Fossil Island; null in saves from before they were tracked. */
 	public Sulliuscep.Memo sulliuscep;
 
+	/** Herb crops followed from planting to the last herb picked; null in saves from before they were tracked. */
+	public Herbs.Memo herbs;
+
 	/** Daily name to what was last seen of it. */
 	public Map<String, DailySnap> dailies = new HashMap<>();
 
@@ -210,6 +213,16 @@ public final class Memory
 			sulliuscep.where = new HashMap<>();
 		}
 		return sulliuscep;
+	}
+
+	/** The herb ledger, made on first use. */
+	public Herbs.Memo herbs()
+	{
+		if (herbs == null)
+		{
+			herbs = new Herbs.Memo();
+		}
+		return herbs;
 	}
 
 	/** The Tears of Guthix record, made on first use. */

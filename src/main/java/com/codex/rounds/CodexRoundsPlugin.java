@@ -10,6 +10,7 @@ import com.codex.rounds.core.DailyState;
 import com.codex.rounds.core.Format;
 import com.codex.rounds.core.Growth;
 import com.codex.rounds.core.Guide;
+import com.codex.rounds.core.Herbs;
 import com.codex.rounds.core.Kingdom;
 import com.codex.rounds.core.Leprechaun;
 import com.codex.rounds.core.Memory;
@@ -82,9 +83,11 @@ import net.runelite.api.events.GameObjectSpawned;
 import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.GameTick;
 import net.runelite.api.events.ItemContainerChanged;
+import net.runelite.api.events.StatChanged;
 import net.runelite.api.events.WidgetLoaded;
 import net.runelite.api.gameval.InterfaceID;
 import net.runelite.api.gameval.InventoryID;
+import net.runelite.api.gameval.ItemID;
 import net.runelite.api.gameval.VarPlayerID;
 import net.runelite.api.gameval.VarbitID;
 import net.runelite.api.WidgetNode;
@@ -140,6 +143,8 @@ public class CodexRoundsPlugin extends Plugin
 	private static final int SCAN_RADIUS = 10;
 	/** Juna sits further from the games necklace landing than a patch from its spot. */
 	private static final int OBJECT_SCAN_RADIUS = 24;
+	/** How near a herb patch the player stands while picking it (the patch is two by two). */
+	private static final int HERB_REACH = 3;
 	/** Quetzal landing sites built, as bits of the quetzals varp (from the Shortest Path plugin's data). */
 	private static final int QUETZAL_KASTORI_BIT = 16384;
 	private static final int QUETZAL_WYRM_BIT = 64;
@@ -238,6 +243,15 @@ public class CodexRoundsPlugin extends Plugin
 	private int lastWoodcutting = -1;
 	private Map<Integer, Integer> lastPack;
 	private int lastCepVarbit = -1;
+	/** The herb ledger; null until a profile is loaded. */
+	private Herbs.Tracker herbs;
+	/** What raises herb yield, as last read on the account tick. */
+	private Herbs.Boosts herbBoosts = Herbs.Boosts.NONE;
+	/** Farming xp and grimy herbs gained since the last tick, counted against the herb patch beside the player. */
+	private int lastFarming = -1;
+	private int farmingGain;
+	private final Map<Integer, Integer> grimyGain = new HashMap<>();
+	private Map<Integer, Integer> herbPack;
 	private int lastCepGrown = -1;
 	private String published;
 	private boolean notified;
@@ -312,6 +326,7 @@ public class CodexRoundsPlugin extends Plugin
 			clearGuidance();
 			memory = null;
 			cep = null;
+			herbs = null;
 			profile = null;
 			progress.stop();
 			quick = false;
@@ -353,6 +368,8 @@ public class CodexRoundsPlugin extends Plugin
 		if (event.getGameState() == GameState.LOGGED_IN)
 		{
 			lastWoodcutting = -1;
+			lastFarming = -1;
+			herbPack = null;
 			ticks = 0;
 			replan = true;
 		}
@@ -483,6 +500,22 @@ public class CodexRoundsPlugin extends Plugin
 		}
 		else if (id == InventoryID.INV || id == InventoryID.WORN)
 		{
+			if (id == InventoryID.INV && herbs != null)
+			{
+				Map<Integer, Integer> pack = contents(event.getItemContainer());
+				if (herbPack != null)
+				{
+					for (Herbs.Herb h : Herbs.Herb.values())
+					{
+						int d = pack.getOrDefault(h.getGrimyId(), 0) - herbPack.getOrDefault(h.getGrimyId(), 0);
+						if (d > 0)
+						{
+							grimyGain.merge(h.getGrimyId(), d, Integer::sum);
+						}
+					}
+				}
+				herbPack = pack;
+			}
 			if (id == InventoryID.INV && cep != null)
 			{
 				Map<Integer, Integer> pack = contents(event.getItemContainer());
@@ -518,6 +551,31 @@ public class CodexRoundsPlugin extends Plugin
 				dirty = true;
 			}
 		}
+		Herbs.Compost heard = herbs == null || !config.herbLedger() ? null : Herbs.heard(msg);
+		if (heard != null)
+		{
+			Spot spot = spotBeside();
+			if (spot != null && spot.getKind() == com.codex.rounds.core.farming.PatchKind.HERB)
+			{
+				herbs.compost(spot, heard);
+				unsaved = true;
+			}
+		}
+	}
+
+	@Subscribe
+	public void onStatChanged(StatChanged event)
+	{
+		if (event.getSkill() != Skill.FARMING)
+		{
+			return;
+		}
+		int xp = event.getXp();
+		if (lastFarming >= 0 && xp > lastFarming)
+		{
+			farmingGain += xp - lastFarming;
+		}
+		lastFarming = xp;
 	}
 
 	@Subscribe
@@ -536,6 +594,7 @@ public class CodexRoundsPlugin extends Plugin
 		WorldPoint wp = me.getWorldLocation();
 		Point loc = Point.of(wp.getX(), wp.getY(), wp.getPlane());
 
+		readPicks(loc, now);
 		readSpots(loc, now);
 		if (ticks % ACCOUNT_TICKS == 0)
 		{
@@ -618,6 +677,10 @@ public class CodexRoundsPlugin extends Plugin
 				if ((before == null || before.isEmpty()) && !now0.isEmpty() && now0.getCropState() == CropState.GROWING && now0.getStage() == 0)
 				{
 					progress.planted(spot, now);
+				}
+				if (herbs != null && config.herbLedger() && spot.getKind() == com.codex.rounds.core.farming.PatchKind.HERB && old != null)
+				{
+					endHerbCrop(herbs.patch(spot, before, now0, now));
 				}
 				dirty = true;
 				unsaved = true;
@@ -762,6 +825,94 @@ public class CodexRoundsPlugin extends Plugin
 			readTearsSkill();
 		}
 		readTears(now);
+		readHerbBoosts();
+	}
+
+	// ---- Herb ledger ----
+
+	/** Magic secateurs, a Farming or max cape, an attas plant and the diaries that raise herb yield. */
+	private void readHerbBoosts()
+	{
+		ItemContainer worn = client.getItemContainer(InventoryID.WORN);
+		Map<Integer, Integer> wornItems = contents(worn);
+		boolean cape = wornItems.containsKey(ItemID.SKILLCAPE_FARMING) || wornItems.containsKey(ItemID.SKILLCAPE_FARMING_TRIMMED)
+			|| wornItems.containsKey(ItemID.SKILLCAPE_MAX);
+		boolean secateurs = carried.containsKey(ItemID.FAIRY_ENCHANTED_SECATEURS);
+		Seen anima = memory.seen(Spot.ANIMA_GUILD);
+		PatchState a = anima == null ? null : Spot.ANIMA_GUILD.getKind().forVarbitValue(anima.getValue());
+		boolean attas = a != null && a.getProduce() == Produce.ATTAS && a.getCropState() != CropState.DEAD;
+		int kandarin = client.getVarbitValue(VarbitID.KANDARIN_DIARY_ELITE_COMPLETE) == 1 ? 3
+			: client.getVarbitValue(VarbitID.KANDARIN_DIARY_HARD_COMPLETE) == 1 ? 2
+			: client.getVarbitValue(VarbitID.KANDARIN_DIARY_MEDIUM_COMPLETE) == 1 ? 1 : 0;
+		herbBoosts = new Herbs.Boosts(secateurs, cape, attas, kandarin,
+			client.getVarbitValue(VarbitID.KOUREND_DIARY_HARD_COMPLETE) == 1, client.getVarbitValue(VarbitID.KOUREND_DIARY_EASY_COMPLETE) == 1);
+	}
+
+	/**
+	 * Herbs picked this tick from the patch beside the player: the grimy herbs that came into the
+	 * pack, or, when an open herb sack took them, the Farming xp over the herb's harvest xp.
+	 */
+	private void readPicks(Point loc, long now)
+	{
+		int xp = farmingGain;
+		Map<Integer, Integer> grimy = new HashMap<>(grimyGain);
+		farmingGain = 0;
+		grimyGain.clear();
+		if (herbs == null || !config.herbLedger() || xp <= 0 && grimy.isEmpty())
+		{
+			return;
+		}
+		for (Spot s : Spot.values())
+		{
+			if (s.getKind() != com.codex.rounds.core.farming.PatchKind.HERB || !s.getPoint().sameMap(loc) || s.getPoint().distance(loc) > HERB_REACH)
+			{
+				continue;
+			}
+			Seen seen = memory.seen(s);
+			PatchState st = seen == null ? null : s.getKind().forVarbitValue(seen.getValue());
+			Herbs.Herb h = st == null || st.getCropState() != CropState.HARVESTABLE ? null : Herbs.Herb.of(st.getProduce());
+			if (h == null)
+			{
+				continue;
+			}
+			int n = Math.max(grimy.getOrDefault(h.getGrimyId(), 0), (int) Math.round(xp / h.getHarvestXp()));
+			if (n > 0)
+			{
+				herbs.picked(s, h, n, memory.farming, herbBoosts, now);
+				unsaved = true;
+				dirty = true;
+			}
+			return;
+		}
+	}
+
+	/** Saves a crop that ended, notes it and sums it up in the chat box. */
+	private void endHerbCrop(Herbs.Crop c)
+	{
+		if (c == null)
+		{
+			return;
+		}
+		unsaved = true;
+		dirty = true;
+		if (notes.isOpen())
+		{
+			notes.note("herbCrop", gson.toJsonTree(c).getAsJsonObject());
+		}
+		if (config.herbChat())
+		{
+			chat(Herbs.summary(c, itemManager::getItemPrice));
+		}
+	}
+
+	/** The herb ledger as the board shows it, or null when it is off. */
+	private Herbs.Shown herbShown()
+	{
+		if (herbs == null || !config.herbLedger() || memory == null)
+		{
+			return null;
+		}
+		return Herbs.show(herbs.getMemo(), memory.farming, Herbs.Compost.of(config.compost()), herbBoosts, itemManager::getItemPrice);
 	}
 
 	/** Quest points, total experience and whether Juna is open to the player at all. */
@@ -1563,6 +1714,7 @@ public class CodexRoundsPlugin extends Plugin
 		boolean loggedIn = client.getGameState() == GameState.LOGGED_IN;
 		String sig = step.getTitle() + step.getDone() + "/" + step.getTotal() + "|" + route.taskCount() + "|" + route.getBuiltAt()
 			+ "|" + (board == null ? -1 : board.count(Status.READY)) + "|" + progress.isStarted() + "|" + loggedIn + "|" + carried.hashCode()
+			+ "|" + (herbs == null ? "" : herbs.getMemo().crops.size() + ":" + herbs.getMemo().growing.size())
 			+ "|" + (cep == null ? "" : cep.getActive() + ":" + (cep.getRun() == null ? -1 : cep.getRun().getFell().size()) + ":" + cep.getMemo().runs.size());
 		if (!force && sig.equals(published) && ticks % PUBLISH_TICKS != 0)
 		{
@@ -1584,7 +1736,7 @@ public class CodexRoundsPlugin extends Plugin
 			!route.isEmpty() && Leprechaun.PLACES.contains(route.getStops().get(0).getPlace()),
 			forecastText(now), memory != null && memory.ironman,
 			Supplies.slots(route.getPulls(), id -> itemManager.getItemComposition(id).isStackable()),
-			cepShown(), Sulliuscep.inSwamp(here()));
+			cepShown(), Sulliuscep.inSwamp(here()), herbShown());
 		Progress snapshot = progress;
 		Route r = route;
 		Map<Spot, Reading> live = memory == null ? Collections.emptyMap() : readings(now);
@@ -1622,6 +1774,7 @@ public class CodexRoundsPlugin extends Plugin
 		profile = configManager.getRSProfileKey();
 		memory = null;
 		cep = null;
+		herbs = null;
 		if (profile == null)
 		{
 			return;
@@ -1643,6 +1796,8 @@ public class CodexRoundsPlugin extends Plugin
 			memory = new Memory();
 		}
 		cep = new Sulliuscep.Tracker(memory.sulliuscep());
+		herbs = new Herbs.Tracker(memory.herbs());
+		herbPack = null;
 		lastPack = null;
 		adoptOutside();
 		dirty = true;

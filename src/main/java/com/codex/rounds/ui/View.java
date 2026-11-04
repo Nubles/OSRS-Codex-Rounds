@@ -1,6 +1,7 @@
 package com.codex.rounds.ui;
 
 import com.codex.rounds.core.Board;
+import com.codex.rounds.core.Herbs;
 import com.codex.rounds.core.Route;
 import com.codex.rounds.core.Step;
 import com.codex.rounds.core.Sulliuscep;
@@ -37,19 +38,30 @@ public final class View
 	public final Sulliuscep.Shown cep;
 	/** Whether the player stands in the Tar Swamp now. */
 	public final boolean inSwamp;
+	/** The herb ledger, or null when it is off. */
+	public final Herbs.Shown herbs;
 
 	public View(boolean loggedIn, boolean known, Board board, Route route, Step step, boolean running, long startedAt, long now,
 		boolean bankKnown, Map<Integer, Integer> carried, Map<Integer, Integer> bank, String lastRound, Map<Integer, Integer> stored, boolean leprechaunFirst, String forecast,
 		boolean ironman, int slots)
 	{
 		this(loggedIn, known, board, route, step, running, startedAt, now, bankKnown, carried, bank, lastRound, stored, leprechaunFirst, forecast,
-			ironman, slots, null, false);
+			ironman, slots, null, false, null);
 	}
 
 	public View(boolean loggedIn, boolean known, Board board, Route route, Step step, boolean running, long startedAt, long now,
 		boolean bankKnown, Map<Integer, Integer> carried, Map<Integer, Integer> bank, String lastRound, Map<Integer, Integer> stored, boolean leprechaunFirst, String forecast,
 		boolean ironman, int slots, Sulliuscep.Shown cep, boolean inSwamp)
 	{
+		this(loggedIn, known, board, route, step, running, startedAt, now, bankKnown, carried, bank, lastRound, stored, leprechaunFirst, forecast,
+			ironman, slots, cep, inSwamp, null);
+	}
+
+	public View(boolean loggedIn, boolean known, Board board, Route route, Step step, boolean running, long startedAt, long now,
+		boolean bankKnown, Map<Integer, Integer> carried, Map<Integer, Integer> bank, String lastRound, Map<Integer, Integer> stored, boolean leprechaunFirst, String forecast,
+		boolean ironman, int slots, Sulliuscep.Shown cep, boolean inSwamp, Herbs.Shown herbs)
+	{
+		this.herbs = herbs;
 		this.cep = cep;
 		this.inSwamp = inSwamp;
 		this.slots = slots;

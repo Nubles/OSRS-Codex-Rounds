@@ -2,6 +2,7 @@ package com.codex.rounds.ui;
 
 import com.codex.rounds.core.Board;
 import com.codex.rounds.core.Format;
+import com.codex.rounds.core.Herbs;
 import com.codex.rounds.core.Kingdom;
 import com.codex.rounds.core.Leprechaun;
 import com.codex.rounds.core.Need;
@@ -440,6 +441,10 @@ public class RoundsPanel extends PluginPanel
 				}
 			}
 			addGroup(list, group.getLabel(), rows);
+			if (group == Spot.Group.HERBS && view.herbs != null)
+			{
+				addHerbLedger(list, view.herbs);
+			}
 		}
 		List<Board.Entry> dailies = new ArrayList<>();
 		Board.Entry kingdom = null;
@@ -472,6 +477,116 @@ public class RoundsPanel extends PluginPanel
 			list.add(cepRecordCard(c));
 		}
 		return list;
+	}
+
+	/** What your own herb patches give you: yield against the wiki, the last run, the herb that pays best and each patch's record. */
+	private void addHerbLedger(StackPanel list, Herbs.Shown h)
+	{
+		int width = WIDTH - 40;
+		list.add(new SectionHeader("Herb ledger", h.harvests > 0 ? h.harvests + (h.harvests == 1 ? " harvest" : " harvests") : null));
+		Card card = new Card(new BorderLayout()).accent(Theme.GREEN);
+		StackPanel body = new StackPanel(4, 0);
+		if (h.harvests == 0)
+		{
+			body.add(Ui.wrapped("Pick a herb patch and Rounds counts what it gives, with its compost, against the wiki's expected yield for your level "
+				+ "and boosts. Your own yield and profit build up here, one harvest at a time.", Theme.small(), Theme.TEXT_MUTED, width));
+		}
+		else
+		{
+			double mean = 0;
+			int n = 0;
+			for (Herbs.HerbStat st : h.herbs)
+			{
+				mean += st.mean * st.harvests;
+				n += st.harvests;
+			}
+			mean = n == 0 ? 0 : mean / n;
+			body.add(Ui.wrapped(Herbs.one(mean) + " herbs a patch", Theme.title(), Theme.GOLD_BRIGHT, width));
+			if (h.luck != null)
+			{
+				double own = h.luck;
+				Color c = own >= 1 ? Theme.GREEN : Theme.EMBER;
+				double top = Math.max(own, 1) * 1.25;
+				body.add(new Meter("Yours against the wiki", Math.round((own - 1) * 100) >= 0 ? "+" + Math.round((own - 1) * 100) + "%" : Math.round((own - 1) * 100) + "%",
+					own / top, c, 1 / top));
+				body.add(Ui.wrapped(Character.toUpperCase(Herbs.luckText(own).charAt(0)) + Herbs.luckText(own).substring(1) + ", over "
+					+ h.compared + (h.compared == 1 ? " harvest" : " harvests") + " whose compost Rounds saw." + (h.compared < 10 ? " Herb yields swing a lot, so this settles with more." : ""),
+					Theme.small(), Theme.TEXT_MUTED, width));
+			}
+			if (h.last != null)
+			{
+				int k = h.last.crops.size();
+				String died = h.last.died() > 0 ? " " + h.last.died() + " died." : "";
+				body.add(Ui.wrapped("Last run: " + k + (k == 1 ? " patch, " : " patches, ") + h.last.herbs() + " herbs, " + Herbs.signedCompact(h.lastProfit)
+					+ " at today's prices after seeds and compost." + died, Theme.small(), Theme.TEXT, width));
+			}
+			if (h.deathRate != null)
+			{
+				body.add(Ui.wrapped("Lost to disease: " + Math.round(h.deathRate * 100) + "% of your crops. Troll Stronghold, Weiss and Harmony Island never catch it.",
+					Theme.small(), Theme.TEXT_FAINT, width));
+			}
+		}
+		card.add(body, BorderLayout.CENTER);
+		list.add(card);
+
+		if (!h.picks.isEmpty())
+		{
+			list.add(new SectionHeader("Pays best now", "a patch"));
+			for (int i = 0; i < Math.min(3, h.picks.size()); i++)
+			{
+				Herbs.Pick p = h.picks.get(i);
+				String sub = Herbs.one(p.yield) + (p.own ? " yours" : " wiki") + " · " + Herbs.compact(p.herbPrice) + " ea";
+				list.add(new Row(icons, p.herb.getGrimyId(), p.herb.getName(), sub, Herbs.signedCompact(p.value), p.value >= 0 ? Theme.GREEN : Theme.BLOOD, false));
+			}
+			list.add(note("Expected coins a patch after the seed and " + (h.usual == null || h.usual == Herbs.Compost.NONE ? "no compost" : h.usual.getLabel())
+				+ " at today's prices, with " + (h.deathRate != null ? "your own" : "the wiki's") + " chance of losing the crop."));
+		}
+
+		if (!h.herbs.isEmpty())
+		{
+			list.add(new SectionHeader("Your herbs"));
+			for (Herbs.HerbStat st : h.herbs)
+			{
+				String sub = st.harvests + (st.harvests == 1 ? " patch" : " patches") + (st.compared > 0 ? " · wiki " + Herbs.one(st.expectedMean) : "");
+				String badge = null;
+				Color color = Theme.TEXT_MUTED;
+				if (st.compared > 0 && st.expectedMean > 0)
+				{
+					long pct = Math.round((st.comparedMean / st.expectedMean - 1) * 100);
+					badge = (pct >= 0 ? "+" : "") + pct + "%";
+					color = pct >= 0 ? Theme.GREEN : Theme.EMBER;
+				}
+				list.add(new Row(icons, st.herb.getGrimyId(), st.herb.getName() + " · " + Herbs.one(st.mean), sub, badge, color, false));
+			}
+		}
+
+		if (!h.patches.isEmpty())
+		{
+			list.add(new SectionHeader("Your patches"));
+			for (Herbs.PatchStat ps : h.patches)
+			{
+				String sub = ps.crops + (ps.crops == 1 ? " crop" : " crops") + (ps.harvests > 0 ? " · " + Herbs.one(ps.mean()) + " each" : "")
+					+ (ps.diseased > 0 ? " · " + ps.diseased + " sick" : "");
+				String badge;
+				Color color;
+				if (ps.died > 0)
+				{
+					badge = ps.died + " died";
+					color = Theme.BLOOD;
+				}
+				else if (ps.diseaseFree)
+				{
+					badge = "Disease-free";
+					color = Theme.TEAL;
+				}
+				else
+				{
+					badge = "None lost";
+					color = Theme.GREEN;
+				}
+				list.add(new Row(icons, -1, ps.spot.getLabel(), sub, badge, color, false));
+			}
+		}
 	}
 
 	/** The sulliuscep run under way: the six caps, the one to cut, the clock against your best and the haul. */
