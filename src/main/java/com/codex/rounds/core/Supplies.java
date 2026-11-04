@@ -243,6 +243,45 @@ public final class Supplies
 		return out;
 	}
 
+	/**
+	 * Pack slots a pull list takes, judged without the item cache: seeds, runes, coins and noted payments
+	 * stack, while saplings, compost buckets, bird houses and logs take a slot each. Worn and optional lines take none.
+	 */
+	public static int slotsEstimate(List<Need> pulls)
+	{
+		int n = 0;
+		for (Need need : pulls)
+		{
+			if (need.isOptional() || need.getLabel().endsWith("(worn)"))
+			{
+				continue;
+			}
+			switch (need.getKind())
+			{
+				case PLANT:
+					Produce p = null;
+					for (Produce q : Produce.values())
+					{
+						if (q.getSeedId() == need.getItemId())
+						{
+							p = q;
+							break;
+						}
+					}
+					n += p != null && Planner.isSapling(p) ? need.getQuantity() : 1;
+					break;
+				case CARE:
+				case BIRDHOUSE:
+					n += need.getLabel().startsWith("Hop seeds") || need.getLabel().startsWith("Bottomless") ? 1 : need.getQuantity();
+					break;
+				default:
+					n += 1;
+					break;
+			}
+		}
+		return n;
+	}
+
 	/** Slots in a full pack. */
 	public static final int PACK_SLOTS = 28;
 

@@ -17,5 +17,13 @@ public enum Unlock
 	/** The quetzal landing site at the Colossal Wyrm Remains is built. */
 	QUETZAL_WYRM,
 	/** The pendant of ates has found the Kastori (Tlati) site. */
-	ATES_KASTORI
+	ATES_KASTORI,
+	/** Lletya and its fruit tree patch. */
+	MOURNINGS_END_I,
+	/** The herb patch on the Troll Stronghold roof. */
+	MY_ARMS_BIG_ADVENTURE,
+	/** The herb patch in Weiss. */
+	MAKING_FRIENDS_WITH_MY_ARM,
+	/** The disease-free herb patch on Harmony Island. */
+	MORYTANIA_ELITE
 }

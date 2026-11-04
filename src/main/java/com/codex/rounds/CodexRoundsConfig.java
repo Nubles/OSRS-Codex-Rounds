@@ -103,6 +103,88 @@ public interface CodexRoundsConfig extends Config
 		}
 	}
 
+	enum Tree
+	{
+		BEST("Best I can plant"),
+		OAK("Oak"),
+		WILLOW("Willow"),
+		MAPLE("Maple"),
+		YEW("Yew"),
+		MAGIC("Magic");
+
+		private final String label;
+
+		Tree(String label)
+		{
+			this.label = label;
+		}
+
+		@Override
+		public String toString()
+		{
+			return label;
+		}
+	}
+
+	enum FruitTree
+	{
+		BEST("Best I can plant"),
+		APPLE("Apple"),
+		BANANA("Banana"),
+		ORANGE("Orange"),
+		CURRY("Curry"),
+		PINEAPPLE("Pineapple"),
+		PAPAYA("Papaya"),
+		PALM("Palm"),
+		DRAGONFRUIT("Dragonfruit");
+
+		private final String label;
+
+		FruitTree(String label)
+		{
+			this.label = label;
+		}
+
+		@Override
+		public String toString()
+		{
+			return label;
+		}
+	}
+
+	enum Herb
+	{
+		BEST("Best I can plant"),
+		GUAM("Guam"),
+		MARRENTILL("Marrentill"),
+		TARROMIN("Tarromin"),
+		HARRALANDER("Harralander"),
+		RANARR("Ranarr"),
+		TOADFLAX("Toadflax"),
+		IRIT("Irit"),
+		AVANTOE("Avantoe"),
+		KWUARM("Kwuarm"),
+		HUASCA("Huasca"),
+		SNAPDRAGON("Snapdragon"),
+		CADANTINE("Cadantine"),
+		LANTADYME("Lantadyme"),
+		DWARF_WEED("Dwarf weed"),
+		TORSTOL("Torstol");
+
+		private final String label;
+
+		Herb(String label)
+		{
+			this.label = label;
+		}
+
+		@Override
+		public String toString()
+		{
+			return label;
+		}
+	}
+
 	@ConfigSection(name = "Round", description = "How the round is planned and shown", position = 0)
 	String ROUND = "round";
 
@@ -655,5 +737,109 @@ public interface CodexRoundsConfig extends Config
 	default boolean bankTab()
 	{
 		return true;
+	}
+
+	@ConfigItem(
+		keyName = "treePatches",
+		name = "Tree patches",
+		description = "Oak to magic trees: Lumbridge, Varrock, Falador, Taverley, the Gnome Stronghold, the Farming Guild and Auburnvale",
+		section = CHORES,
+		position = 11
+	)
+	default boolean treePatches()
+	{
+		return true;
+	}
+
+	@ConfigItem(
+		keyName = "fruitTrees",
+		name = "Fruit tree patches",
+		description = "The Gnome Stronghold, Tree Gnome Village, Brimhaven, Catherby, Lletya, the Farming Guild and Kastori",
+		section = CHORES,
+		position = 12
+	)
+	default boolean fruitTrees()
+	{
+		return true;
+	}
+
+	@ConfigItem(
+		keyName = "herbPatches",
+		name = "Herb patches",
+		description = "Every herb patch you can reach, from Falador to Harmony Island",
+		section = CHORES,
+		position = 13
+	)
+	default boolean herbPatches()
+	{
+		return true;
+	}
+
+	@ConfigItem(
+		keyName = "skipPatches",
+		name = "Leave out",
+		description = "Places to leave off the round, separated by commas. A place leaves out every patch there (Lletya, Weiss); add the kind for just one (Catherby herbs, Falador tree)",
+		section = CHORES,
+		position = 14
+	)
+	default String skipPatches()
+	{
+		return "";
+	}
+
+	@ConfigItem(
+		keyName = "treeCrop",
+		name = "Trees",
+		description = "What to plant in tree patches",
+		section = PLANTING,
+		position = 7
+	)
+	default Tree treeCrop()
+	{
+		return Tree.BEST;
+	}
+
+	@ConfigItem(
+		keyName = "fruitTreeCrop",
+		name = "Fruit trees",
+		description = "What to plant in fruit tree patches",
+		section = PLANTING,
+		position = 8
+	)
+	default FruitTree fruitTreeCrop()
+	{
+		return FruitTree.BEST;
+	}
+
+	@ConfigItem(
+		keyName = "herbCrop",
+		name = "Herbs",
+		description = "What to plant in herb patches",
+		section = PLANTING,
+		position = 9
+	)
+	default Herb herbCrop()
+	{
+		return Herb.BEST;
+	}
+
+	@ConfigSection(
+		name = "Field notes",
+		description = "A local record for checking the plugin's guesses",
+		position = 99,
+		closedByDefault = true
+	)
+	String FIELD_NOTES = "fieldNotesSection";
+
+	@ConfigItem(
+		keyName = "fieldNotes",
+		name = "Keep field notes",
+		description = "Write what Rounds reads and decides to its folder in .runelite/plugin-data on your computer, for checking its guesses; nothing is sent anywhere",
+		section = FIELD_NOTES,
+		position = 0
+	)
+	default boolean fieldNotes()
+	{
+		return false;
 	}
 }
