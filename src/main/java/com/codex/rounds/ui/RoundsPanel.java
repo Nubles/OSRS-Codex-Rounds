@@ -12,6 +12,7 @@ import com.codex.rounds.core.Status;
 import com.codex.rounds.core.Step;
 import com.codex.rounds.core.Supplies;
 import com.codex.rounds.core.Stop;
+import com.codex.rounds.core.Sulliuscep;
 import com.codex.rounds.core.Task;
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
@@ -161,9 +162,20 @@ public class RoundsPanel extends PluginPanel
 		}
 		Route route = view.route;
 		Step step = view.step;
+		boolean cepHere = view.cep != null && (view.cep.running || view.inSwamp);
 
+		if (cepHere && !view.running)
+		{
+			addCep(list);
+			list.space(2);
+		}
 		list.add(new SectionHeader(view.running ? "Next step" : "Your round", view.running && step.getTotal() > 0 ? step.getDone() + "/" + step.getTotal() : null));
 		list.add(stepCard(route, step));
+		if (cepHere && view.running)
+		{
+			list.space(2);
+			addCep(list);
+		}
 
 		if (!route.isEmpty())
 		{
@@ -453,7 +465,97 @@ public class RoundsPanel extends PluginPanel
 		}
 		list.add(new SectionHeader("Kingdom of Miscellania"));
 		list.add(kingdomCard(b.getKingdom(), kingdom));
+		if (view.cep != null)
+		{
+			Sulliuscep.Shown c = view.cep;
+			list.add(new SectionHeader("Sulliuscep runs", c.best != null ? "best " + Format.clock(c.best.seconds) : null));
+			list.add(cepRecordCard(c));
+		}
 		return list;
+	}
+
+	/** The sulliuscep run under way: the six caps, the one to cut, the clock against your best and the haul. */
+	private void addCep(StackPanel list)
+	{
+		Sulliuscep.Shown c = view.cep;
+		list.add(new SectionHeader("Sulliuscep run", c.fell.size() + "/" + Sulliuscep.CAPS));
+		Card card = new Card(new BorderLayout()).accent(Theme.GREEN).highlighted(c.running);
+		StackPanel body = new StackPanel(4, 0);
+		int width = WIDTH - 40;
+		body.add(new CepTrail(c.order, c.fell, c.active));
+		body.add(Ui.wrapped(c.title, Theme.title(), Theme.GOLD_BRIGHT, width));
+		body.add(Ui.wrapped(c.detail, Theme.small(), Theme.TEXT, width));
+		if (c.running)
+		{
+			Double mark = c.best == null ? null : c.ghostFell / (double) Sulliuscep.CAPS;
+			Color pace = c.lastDiff == null ? Theme.GOLD : c.lastDiff <= 0 ? Theme.GREEN : Theme.EMBER;
+			body.add(new Meter("Run " + Format.clock(c.elapsed), c.best == null ? "first full run" : "best " + Format.clock(c.best.seconds),
+				c.fell.size() / (double) Sulliuscep.CAPS, pace, mark));
+			String ghost = Sulliuscep.ghostText(c);
+			if (ghost != null)
+			{
+				body.add(Ui.wrapped(ghost, Theme.small(), pace, width));
+			}
+			String haul = Sulliuscep.haulText(c.haul);
+			body.add(Ui.wrapped(haul == null ? "Nothing in the pack from this run yet." : "This run: " + haul + ".", Theme.small(), Theme.TEXT_MUTED, width));
+			if (c.xp > 0)
+			{
+				body.add(Ui.wrapped(Format.number(c.xp) + " Woodcutting xp this run" + rateText(c, "; "), Theme.small(), Theme.TEXT_MUTED, width));
+			}
+		}
+		else
+		{
+			body.add(Ui.wrapped(c.last != null ? "Your run starts with the first chop. Last run: " + lastText(c.last) + "."
+				: "Your run starts with the first chop. Rounds times it and counts what it gives.", Theme.small(), Theme.TEXT_MUTED, width));
+		}
+		if (!c.orderLearned)
+		{
+			body.add(Ui.wrapped("Caps go by the game's own numbering until Rounds has seen you cut a whole lap.", Theme.small(), Theme.TEXT_FAINT, width));
+		}
+		card.add(body, BorderLayout.CENTER);
+		list.add(card);
+	}
+
+	private JComponent cepRecordCard(Sulliuscep.Shown c)
+	{
+		Card card = new Card(new BorderLayout()).accent(Theme.GREEN);
+		StackPanel body = new StackPanel(4, 0);
+		int width = WIDTH - 40;
+		if (c.last == null)
+		{
+			body.add(Ui.wrapped("Chop a sulliuscep in Fossil Island's Tar Swamp (65 Woodcutting, after Bone Voyage) and Rounds times the run, "
+				+ "names the next cap and keeps your best.", Theme.small(), Theme.TEXT_MUTED, width));
+		}
+		else
+		{
+			if (c.xpHour > 0)
+			{
+				body.add(Ui.wrapped(Format.number(c.xpHour) + " xp/hr", Theme.title(), Theme.GOLD_BRIGHT, width));
+				body.add(Ui.wrapped("Woodcutting, from your last " + (c.rateRuns == 1 ? "run" : c.rateRuns + " runs") + ".", Theme.small(), Theme.TEXT_MUTED, width));
+			}
+			if (c.best != null)
+			{
+				body.add(new Meter("Fastest lap", Format.clock(c.best.seconds), 1, Theme.GREEN, null));
+			}
+			String per = Sulliuscep.haulText(c.perRun);
+			if (per != null)
+			{
+				body.add(Ui.wrapped("A full run brings about " + per + ".", Theme.small(), Theme.TEXT, width));
+			}
+			body.add(Ui.wrapped("Last run: " + lastText(c.last) + ".", Theme.small(), Theme.TEXT_FAINT, width));
+		}
+		card.add(body, BorderLayout.CENTER);
+		return card;
+	}
+
+	private static String rateText(Sulliuscep.Shown c, String sep)
+	{
+		return c.xpHour > 0 ? sep + Format.number(c.xpHour) + " an hour over your runs." : ".";
+	}
+
+	private static String lastText(Sulliuscep.RunRecord r)
+	{
+		return Format.clock(r.seconds) + ", " + r.fell.size() + (r.fell.size() == 1 ? " cap down" : " caps down") + (r.complete ? "" : " (left early)");
 	}
 
 	private void addGroup(StackPanel list, String label, List<Board.Entry> rows)

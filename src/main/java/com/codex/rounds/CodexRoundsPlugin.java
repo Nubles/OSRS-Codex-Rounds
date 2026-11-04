@@ -24,6 +24,7 @@ import com.codex.rounds.core.Spot;
 import com.codex.rounds.core.Status;
 import com.codex.rounds.core.Step;
 import com.codex.rounds.core.Stop;
+import com.codex.rounds.core.Sulliuscep;
 import com.codex.rounds.core.Supplies;
 import com.codex.rounds.core.Task;
 import com.codex.rounds.core.Tears;
@@ -77,6 +78,7 @@ import net.runelite.api.WorldView;
 import net.runelite.api.coords.LocalPoint;
 import net.runelite.api.coords.WorldPoint;
 import net.runelite.api.events.ChatMessage;
+import net.runelite.api.events.GameObjectSpawned;
 import net.runelite.api.events.GameStateChanged;
 import net.runelite.api.events.GameTick;
 import net.runelite.api.events.ItemContainerChanged;
@@ -230,6 +232,13 @@ public class CodexRoundsPlugin extends Plugin
 	private int ticks;
 	/** Juna's last line read, so each is heard once. */
 	private String lastJuna;
+	/** The sulliuscep run, followed tick by tick; null until a profile is loaded. */
+	private Sulliuscep.Tracker cep;
+	/** Woodcutting xp and the pack as last read, so each gain is counted once. */
+	private int lastWoodcutting = -1;
+	private Map<Integer, Integer> lastPack;
+	private int lastCepVarbit = -1;
+	private int lastCepGrown = -1;
 	private String published;
 	private boolean notified;
 	private WorldMapPoint mapPoint;
@@ -302,6 +311,7 @@ public class CodexRoundsPlugin extends Plugin
 			save();
 			clearGuidance();
 			memory = null;
+			cep = null;
 			profile = null;
 			progress.stop();
 			quick = false;
@@ -331,6 +341,10 @@ public class CodexRoundsPlugin extends Plugin
 	@Subscribe
 	public void onGameStateChanged(GameStateChanged event)
 	{
+		if (event.getGameState() == GameState.LOGIN_SCREEN && cep != null)
+		{
+			endCepRun(cep.abandon(Instant.now().getEpochSecond()));
+		}
 		if (event.getGameState() == GameState.LOGIN_SCREEN || event.getGameState() == GameState.HOPPING)
 		{
 			save();
@@ -338,6 +352,7 @@ public class CodexRoundsPlugin extends Plugin
 		}
 		if (event.getGameState() == GameState.LOGGED_IN)
 		{
+			lastWoodcutting = -1;
 			ticks = 0;
 			replan = true;
 		}
@@ -468,6 +483,12 @@ public class CodexRoundsPlugin extends Plugin
 		}
 		else if (id == InventoryID.INV || id == InventoryID.WORN)
 		{
+			if (id == InventoryID.INV && cep != null)
+			{
+				Map<Integer, Integer> pack = contents(event.getItemContainer());
+				cep.gained(lastPack, pack, here());
+				lastPack = pack;
+			}
 			carried = readCarried();
 			memory.carried = new HashMap<>(carried);
 			dirty = true;
@@ -522,6 +543,7 @@ public class CodexRoundsPlugin extends Plugin
 		}
 		readPayment();
 		readJuna(now);
+		readSulliuscep(loc, now);
 		ticks++;
 
 		refresh(false);
@@ -841,6 +863,113 @@ public class CodexRoundsPlugin extends Plugin
 			noteTears("juna");
 			dirty = true;
 			unsaved = true;
+		}
+	}
+
+	// ---- Sulliuscep run ----
+
+	@Subscribe
+	public void onGameObjectSpawned(GameObjectSpawned event)
+	{
+		GameObject go = event.getGameObject();
+		int cap = Sulliuscep.cap(go.getId());
+		if (cap == 0 || cep == null)
+		{
+			return;
+		}
+		WorldPoint wp = go.getWorldLocation();
+		if (cep.place(cap, Point.of(wp.getX(), wp.getY(), wp.getPlane())))
+		{
+			unsaved = true;
+		}
+	}
+
+	/**
+	 * Which of the six sulliusceps is grown, asked of the client: each placement shows the grown
+	 * Sulliuscep or a sprout by the player's own variable. Then the tracker follows the run.
+	 */
+	private void readSulliuscep(Point loc, long now)
+	{
+		if (cep == null || !config.sulliuscep())
+		{
+			return;
+		}
+		boolean swamp = Sulliuscep.inSwamp(loc);
+		if (!swamp && cep.getRun() == null)
+		{
+			lastWoodcutting = -1;
+			return;
+		}
+		int grown = 0;
+		for (int i = 0; i < Sulliuscep.OBJECTS.length && grown == 0; i++)
+		{
+			ObjectComposition def = client.getObjectDefinition(Sulliuscep.OBJECTS[i]);
+			if (def == null || def.getImpostorIds() == null)
+			{
+				continue;
+			}
+			ObjectComposition shown = def.getImpostor();
+			if (shown != null && shown.getId() == Sulliuscep.GROWN)
+			{
+				grown = i + 1;
+			}
+		}
+		int varbit = client.getVarbitValue(Sulliuscep.VARBIT);
+		if (varbit != lastCepVarbit || grown != lastCepGrown)
+		{
+			lastCepVarbit = varbit;
+			lastCepGrown = grown;
+			if (notes.isOpen())
+			{
+				JsonObject n = new JsonObject();
+				n.addProperty("varbit", varbit);
+				n.addProperty("grown", grown);
+				n.addProperty("x", loc.getX());
+				n.addProperty("y", loc.getY());
+				notes.note("sulliuscep", n);
+			}
+			dirty = true;
+		}
+		int xp = client.getSkillExperience(Skill.WOODCUTTING);
+		if (lastWoodcutting > 0 && xp > lastWoodcutting)
+		{
+			cep.xp(xp - lastWoodcutting, loc, now);
+		}
+		if (xp > 0)
+		{
+			lastWoodcutting = xp;
+		}
+		if (lastPack == null)
+		{
+			ItemContainer inv = client.getItemContainer(InventoryID.INV);
+			lastPack = inv == null ? null : contents(inv);
+		}
+		int before = cep.getRun() == null ? -1 : cep.getRun().getFell().size();
+		Sulliuscep.RunRecord ended = cep.tick(grown, loc, now);
+		if (ended != null || (cep.getRun() == null ? -1 : cep.getRun().getFell().size()) != before)
+		{
+			unsaved = true;
+			dirty = true;
+		}
+		endCepRun(ended);
+	}
+
+	/** Saves a finished run and sums it up in the chat box. */
+	private void endCepRun(Sulliuscep.RunRecord ended)
+	{
+		if (ended == null)
+		{
+			return;
+		}
+		unsaved = true;
+		dirty = true;
+		if (notes.isOpen())
+		{
+			notes.note("sulliuscepRun", gson.toJsonTree(ended).getAsJsonObject());
+		}
+		if (config.sulliuscepChat())
+		{
+			chat(Sulliuscep.summary(ended, cep.getMemo()));
 		}
 	}
 
@@ -1188,6 +1317,7 @@ public class CodexRoundsPlugin extends Plugin
 		if (!on)
 		{
 			clearGuidance();
+			showCep();
 			return;
 		}
 		String over;
@@ -1217,6 +1347,36 @@ public class CodexRoundsPlugin extends Plugin
 
 		resolveTarget();
 		placeMapPoint();
+	}
+
+	/**
+	 * On a sulliuscep run with no round under way, the plaque names the cap to cut next. Only the
+	 * plaque: nothing is drawn on the caps themselves.
+	 */
+	private void showCep()
+	{
+		Sulliuscep.Shown c = cepShown();
+		if (c == null || !config.plaque() || !config.sulliuscepPlaque() || !(c.running || Sulliuscep.inSwamp(here())))
+		{
+			return;
+		}
+		String over = "Sulliuscep run: " + c.fell.size() + " of " + Sulliuscep.CAPS + " down";
+		String detail = c.detail;
+		if (c.best != null && c.running)
+		{
+			detail += " " + Sulliuscep.ghostText(c);
+		}
+		plaque.show(new StepPlaque.Shown(over, c.title, detail, Format.clock(c.elapsed), c.fell.size(), Sulliuscep.CAPS));
+	}
+
+	/** The run as the panel and plaque show it, or null when runs are not tracked. */
+	private Sulliuscep.Shown cepShown()
+	{
+		if (cep == null || !config.sulliuscep())
+		{
+			return null;
+		}
+		return Sulliuscep.show(cep, here(), Instant.now().getEpochSecond());
 	}
 
 	private void clearGuidance()
@@ -1402,7 +1562,8 @@ public class CodexRoundsPlugin extends Plugin
 		long now = Instant.now().getEpochSecond();
 		boolean loggedIn = client.getGameState() == GameState.LOGGED_IN;
 		String sig = step.getTitle() + step.getDone() + "/" + step.getTotal() + "|" + route.taskCount() + "|" + route.getBuiltAt()
-			+ "|" + (board == null ? -1 : board.count(Status.READY)) + "|" + progress.isStarted() + "|" + loggedIn + "|" + carried.hashCode();
+			+ "|" + (board == null ? -1 : board.count(Status.READY)) + "|" + progress.isStarted() + "|" + loggedIn + "|" + carried.hashCode()
+			+ "|" + (cep == null ? "" : cep.getActive() + ":" + (cep.getRun() == null ? -1 : cep.getRun().getFell().size()) + ":" + cep.getMemo().runs.size());
 		if (!force && sig.equals(published) && ticks % PUBLISH_TICKS != 0)
 		{
 			return;
@@ -1422,7 +1583,8 @@ public class CodexRoundsPlugin extends Plugin
 			memory == null || memory.stored == null ? Collections.emptyMap() : new HashMap<>(memory.stored),
 			!route.isEmpty() && Leprechaun.PLACES.contains(route.getStops().get(0).getPlace()),
 			forecastText(now), memory != null && memory.ironman,
-			Supplies.slots(route.getPulls(), id -> itemManager.getItemComposition(id).isStackable()));
+			Supplies.slots(route.getPulls(), id -> itemManager.getItemComposition(id).isStackable()),
+			cepShown(), Sulliuscep.inSwamp(here()));
 		Progress snapshot = progress;
 		Route r = route;
 		Map<Spot, Reading> live = memory == null ? Collections.emptyMap() : readings(now);
@@ -1459,6 +1621,7 @@ public class CodexRoundsPlugin extends Plugin
 	{
 		profile = configManager.getRSProfileKey();
 		memory = null;
+		cep = null;
 		if (profile == null)
 		{
 			return;
@@ -1479,6 +1642,8 @@ public class CodexRoundsPlugin extends Plugin
 		{
 			memory = new Memory();
 		}
+		cep = new Sulliuscep.Tracker(memory.sulliuscep());
+		lastPack = null;
 		adoptOutside();
 		dirty = true;
 	}

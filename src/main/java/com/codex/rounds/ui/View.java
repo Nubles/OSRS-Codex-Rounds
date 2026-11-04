@@ -3,6 +3,7 @@ package com.codex.rounds.ui;
 import com.codex.rounds.core.Board;
 import com.codex.rounds.core.Route;
 import com.codex.rounds.core.Step;
+import com.codex.rounds.core.Sulliuscep;
 import java.util.Collections;
 import java.util.Map;
 
@@ -32,11 +33,25 @@ public final class View
 	public final boolean ironman;
 	/** Roughly the pack slots the pull list takes. */
 	public final int slots;
+	/** The sulliuscep run, or null when runs are not tracked. */
+	public final Sulliuscep.Shown cep;
+	/** Whether the player stands in the Tar Swamp now. */
+	public final boolean inSwamp;
 
 	public View(boolean loggedIn, boolean known, Board board, Route route, Step step, boolean running, long startedAt, long now,
 		boolean bankKnown, Map<Integer, Integer> carried, Map<Integer, Integer> bank, String lastRound, Map<Integer, Integer> stored, boolean leprechaunFirst, String forecast,
 		boolean ironman, int slots)
 	{
+		this(loggedIn, known, board, route, step, running, startedAt, now, bankKnown, carried, bank, lastRound, stored, leprechaunFirst, forecast,
+			ironman, slots, null, false);
+	}
+
+	public View(boolean loggedIn, boolean known, Board board, Route route, Step step, boolean running, long startedAt, long now,
+		boolean bankKnown, Map<Integer, Integer> carried, Map<Integer, Integer> bank, String lastRound, Map<Integer, Integer> stored, boolean leprechaunFirst, String forecast,
+		boolean ironman, int slots, Sulliuscep.Shown cep, boolean inSwamp)
+	{
+		this.cep = cep;
+		this.inSwamp = inSwamp;
 		this.slots = slots;
 		this.forecast = forecast;
 		this.ironman = ironman;

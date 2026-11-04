@@ -836,6 +836,49 @@ public interface CodexRoundsConfig extends Config
 	}
 
 	@ConfigSection(
+		name = "Sulliuscep run",
+		description = "Timing your Fossil Island sulliuscep runs: the cap to cut next, your best run and Woodcutting xp an hour",
+		position = 6
+	)
+	String SULLIUSCEP = "sulliuscepSection";
+
+	@ConfigItem(
+		keyName = "sulliuscep",
+		name = "Track sulliuscep runs",
+		description = "In the Tar Swamp, read which sulliuscep is grown, time each run against your best and count what it gave",
+		section = SULLIUSCEP,
+		position = 0
+	)
+	default boolean sulliuscep()
+	{
+		return true;
+	}
+
+	@ConfigItem(
+		keyName = "sulliuscepPlaque",
+		name = "Next cap on the plaque",
+		description = "While on a sulliuscep run and no round is under way, the step plaque names the cap to cut next. Nothing is drawn on the caps themselves",
+		section = SULLIUSCEP,
+		position = 1
+	)
+	default boolean sulliuscepPlaque()
+	{
+		return true;
+	}
+
+	@ConfigItem(
+		keyName = "sulliuscepChat",
+		name = "Run summary in chat",
+		description = "When a sulliuscep run ends, post its time, what it gave and the Woodcutting xp an hour in the chat box",
+		section = SULLIUSCEP,
+		position = 2
+	)
+	default boolean sulliuscepChat()
+	{
+		return true;
+	}
+
+	@ConfigSection(
 		name = "Field notes",
 		description = "A local record for checking the plugin's guesses",
 		position = 99,
