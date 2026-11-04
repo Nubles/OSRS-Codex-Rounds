@@ -124,6 +124,46 @@ public final class Settings
 		return this;
 	}
 
+	/**
+	 * The spots a player's "Leave out" list names: each comma-separated entry matches every spot at a
+	 * place ("Lletya", "Weiss"), or one kind there when it names both ("Catherby herbs", "Falador tree").
+	 */
+	public static java.util.List<Spot> leftOut(String list)
+	{
+		java.util.List<Spot> out = new java.util.ArrayList<>();
+		if (list == null || list.trim().isEmpty())
+		{
+			return out;
+		}
+		java.util.List<String> words = new java.util.ArrayList<>();
+		for (String w : list.split("[,;\\n]"))
+		{
+			String t = w.trim().toLowerCase();
+			if (!t.isEmpty())
+			{
+				words.add(t);
+			}
+		}
+		for (Spot s : Spot.values())
+		{
+			String label = s.getLabel().toLowerCase();
+			String place = s.getPlace().getLabel().toLowerCase();
+			String kind = s.kindName().toLowerCase();
+			String singular = kind.endsWith("s") ? kind.substring(0, kind.length() - 1) : kind;
+			for (String w : words)
+			{
+				boolean both = w.contains(singular) && (w.contains(label) || w.contains(place));
+				boolean placeOnly = !w.contains(" ") || w.equals(label) || w.equals(place);
+				if (both || placeOnly && (label.startsWith(w) || place.startsWith(w)))
+				{
+					out.add(s);
+					break;
+				}
+			}
+		}
+		return out;
+	}
+
 	/** Plant this in every patch of the kind, or null for the best the account can plant. */
 	public Settings crop(PatchKind kind, Produce produce)
 	{

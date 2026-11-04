@@ -131,7 +131,7 @@ public final class Ability
 		return ironman;
 	}
 
-	/** Whether the account has the unlock; before quests were ever read, it is assumed. */
+	/** Whether the account has an unlock; true until quests were ever read, so nothing is hidden on a guess. */
 	public boolean has(Unlock unlock)
 	{
 		return unlock == null || !unlocksKnown || unlocks.contains(unlock);

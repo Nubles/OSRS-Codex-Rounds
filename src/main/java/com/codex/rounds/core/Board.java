@@ -244,14 +244,14 @@ public final class Board
 			{
 				r = r.as(Status.OFF, "Left out of rounds");
 			}
+			else if (!ability.has(spot.needs()))
+			{
+				r = r.as(Status.LOCKED, unlockHint(spot.needs()));
+			}
 			else if (r.getStatus() == Status.UNSEEN)
 			{
 				int need = requiredLevel(spot);
-				if (!ability.has(spot.requires()))
-				{
-					r = r.as(Status.LOCKED, unlockHint(spot.requires()));
-				}
-				else if (spot.isBirdhouse() ? ability.getHunter() < need : ability.getFarming() < need)
+				if (spot.isBirdhouse() ? ability.getHunter() < need : ability.getFarming() < need)
 				{
 					r = r.as(Status.LOCKED, "Needs " + need + (spot.isBirdhouse() ? " Hunter" : " Farming"));
 				}
@@ -344,7 +344,21 @@ public final class Board
 
 	static String unlockHint(Unlock u)
 	{
-		return u == Unlock.TROUBLED_TORTUGANS ? "Needs Troubled Tortugans" : "Locked";
+		switch (u)
+		{
+			case MOURNINGS_END_I:
+				return "Needs Mourning's End Part I";
+			case MY_ARMS_BIG_ADVENTURE:
+				return "Needs My Arm's Big Adventure";
+			case MAKING_FRIENDS_WITH_MY_ARM:
+				return "Needs Making Friends with My Arm";
+			case MORYTANIA_ELITE:
+				return "Needs the elite Morytania diary";
+			case TROUBLED_TORTUGANS:
+				return "Needs Troubled Tortugans";
+			default:
+				return "Locked";
+		}
 	}
 
 	/** The lowest level that opens a spot. */

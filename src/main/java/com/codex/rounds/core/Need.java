@@ -11,7 +11,7 @@ public final class Need
 		TOOL("Tools"),
 		PLANT("Seeds and saplings"),
 		CARE("Compost and cures"),
-		PAYMENT("Gardener payments"),
+		PAYMENT("Gardener payments (noted is fine)"),
 		BIRDHOUSE("Bird houses"),
 		DAILY("Dailies"),
 		COINS("Coins");
