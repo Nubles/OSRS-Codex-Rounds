@@ -69,7 +69,13 @@ public enum Produce
 	CELASTRUS("Celastrus", PatchKind.CELASTRUS, ItemID.BATTLESTAFF, 160, 6, 0, 4, ItemID.PLANTPOT_CELASTRUS_TREE_SAPLING, 85, ItemID.CACTUS_POTATO, 8),
 	REDWOOD("Redwood", PatchKind.REDWOOD, ItemID.REDWOOD_LOGS, 640, 11, 0, 1, ItemID.PLANTPOT_REDWOOD_TREE_SAPLING, 90, ItemID.DRAGONFRUIT, 6),
 	HESPORI("Hespori", PatchKind.HESPORI, ItemID.HESPORI_SEED, 640, 4, 0, 2, ItemID.HESPORI_SEED, 65),
-	CRYSTAL_TREE("Crystal tree", PatchKind.CRYSTAL_TREE, ItemID.PLANTPOT_CRYSTAL_TREE_SAPLING, 80, 7, 0, 1, ItemID.PLANTPOT_CRYSTAL_TREE_SAPLING, 74);
+	CRYSTAL_TREE("Crystal tree", PatchKind.CRYSTAL_TREE, ItemID.PLANTPOT_CRYSTAL_TREE_SAPLING, 80, 7, 0, 1, ItemID.PLANTPOT_CRYSTAL_TREE_SAPLING, 74),
+
+	// Coral, in the nurseries under the Great Conch: four 40 minute stages (OSRS Wiki, Coral farming),
+	// protected by Chet for five of the coral below it (giant seaweed for elkhorn).
+	ELKHORN_CORAL("Elkhorn coral", PatchKind.CORAL, ItemID.CORAL_ELKHORN, 40, 5, 0, 1, ItemID.CORAL_ELKHORN_FRAG, 28, ItemID.GIANT_SEAWEED, 5),
+	PILLAR_CORAL("Pillar coral", PatchKind.CORAL, ItemID.CORAL_PILLAR, 40, 5, 0, 1, ItemID.CORAL_PILLAR_FRAG, 52, ItemID.CORAL_ELKHORN, 5),
+	UMBRAL_CORAL("Umbral coral", PatchKind.CORAL, ItemID.CORAL_UMBRAL, 40, 5, 0, 1, ItemID.CORAL_UMBRAL_FRAG, 77, ItemID.CORAL_PILLAR, 5);
 
 	private final String name;
 	private final PatchKind kind;

@@ -923,7 +923,49 @@ public enum PatchKind
 				}
 				return null;
 			}
+		},
+	CORAL("Coral", false)
+		{
+			@Override
+			public PatchState forVarbitValue(int value)
+			{
+				if (value >= 0 && value <= 3)
+				{
+					// Coral nursery[Inspect,Guide] 58676: no weeds grow on a nursery, it is ready for a frag
+					return new PatchState(Produce.WEEDS, CropState.GROWING, 0, Action.RAKE);
+				}
+				for (int c = 0; c < CORALS.length; c++)
+				{
+					// Each coral takes eleven values: four growing, one to collect, three diseased, three dead.
+					int base = 4 + 11 * c;
+					Produce coral = CORALS[c];
+					if (value >= base && value <= base + 3)
+					{
+						// Elkhorn 58677-58680, pillar 58682-58685, umbral 58687-58690 [Inspect,Guide]
+						return new PatchState(coral, CropState.GROWING, value - base, Action.WAIT);
+					}
+					if (value == base + 4)
+					{
+						// Elkhorn 58681, pillar 58686, umbral 58691 [Collect,Inspect,Guide]
+						return new PatchState(coral, CropState.HARVESTABLE, 0, Action.HARVEST);
+					}
+					if (value >= base + 5 && value <= base + 7)
+					{
+						// Diseased coral [Prune,Inspect,Guide]
+						return new PatchState(coral, CropState.DISEASED, value - base - 4, Action.PRUNE);
+					}
+					if (value >= base + 8 && value <= base + 10)
+					{
+						// Dead coral [Clear,Inspect,Guide]
+						return new PatchState(coral, CropState.DEAD, value - base - 7, Action.CLEAR);
+					}
+				}
+				return null;
+			}
 		};
+
+	/** The corals in the order their varbit values come in. */
+	private static final Produce[] CORALS = {Produce.ELKHORN_CORAL, Produce.PILLAR_CORAL, Produce.UMBRAL_CORAL};
 
 	/** The patch's state for a varbit value, or null for a value the game never sends. */
 	public abstract PatchState forVarbitValue(int value);

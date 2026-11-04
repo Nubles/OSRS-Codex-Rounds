@@ -627,6 +627,7 @@ public class CodexRoundsPlugin extends Plugin
 		addIf(out, Unlock.FREMENNIK_TRIALS, finished(Quest.THE_FREMENNIK_TRIALS));
 		addIf(out, Unlock.CHILDREN_OF_THE_SUN, finished(Quest.CHILDREN_OF_THE_SUN));
 		addIf(out, Unlock.GREAT_CONCH, Quest.TROUBLED_TORTUGANS.getState(client) != QuestState.NOT_STARTED);
+		addIf(out, Unlock.TROUBLED_TORTUGANS, finished(Quest.TROUBLED_TORTUGANS));
 		addIf(out, Unlock.THRONE_OF_MISCELLANIA, finished(Quest.THRONE_OF_MISCELLANIA));
 		addIf(out, Unlock.SONG_OF_THE_ELVES, finished(Quest.SONG_OF_THE_ELVES));
 		addIf(out, Unlock.BONE_VOYAGE, finished(Quest.BONE_VOYAGE));
@@ -1296,6 +1297,7 @@ public class CodexRoundsPlugin extends Plugin
 			.group(Spot.Group.TREES, config.specialTrees())
 			.group(Spot.Group.SPIRIT_TREES, config.spiritTrees())
 			.group(Spot.Group.PATCHES, config.specialPatches())
+			.group(Spot.Group.CORAL, config.coral())
 			.daily(Daily.ZAFF, config.zaff())
 			.daily(Daily.CROMPERTY, config.cromperty())
 			.daily(Daily.FLAX, config.flax())

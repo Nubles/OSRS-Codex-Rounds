@@ -253,7 +253,7 @@ public final class Planner
 			plant = contract;
 		}
 		boolean compost = plant != null && settings.getCompost() != Settings.Compost.NONE && spot.getKind() != PatchKind.HESPORI
-			&& spot.getKind() != PatchKind.CRYSTAL_TREE;
+			&& spot.getKind() != PatchKind.CRYSTAL_TREE && spot.getKind() != PatchKind.CORAL;
 		boolean protect = plant != null && settings.isProtect() && plant.isProtectable() && spot.getGardener() >= 0;
 		String detail = spotDetail(spot, r, plant);
 		int secs = workSeconds(spot, r) + (plant != null ? 10 : 0) + (compost ? 3 : 0) + (protect ? 8 : 0);
@@ -333,9 +333,9 @@ public final class Planner
 		{
 			return bestOwned;
 		}
-		if (ownedOnly || kind == PatchKind.ANIMA || kind == PatchKind.HESPORI)
+		if (ownedOnly || kind == PatchKind.ANIMA || kind == PatchKind.HESPORI || kind == PatchKind.CORAL)
 		{
-			// Rare seeds: only plan one the account has, or might have when the bank is unknown.
+			// Rare seeds and frags: only plan one the account has, or might have when the bank is unknown.
 			return ability.isBankKnown() ? null : bestAny;
 		}
 		return bestAny;
@@ -412,6 +412,10 @@ public final class Planner
 		{
 			return ", dig it up";
 		}
+		if (spot.getKind() == PatchKind.CORAL)
+		{
+			return ", clear the dead coral";
+		}
 		if (isTree(spot) && spot.getGardener() >= 0)
 		{
 			return ", pay the gardener 200 coins to clear it";
@@ -439,6 +443,8 @@ public final class Planner
 				return "Pick the calquat fruit and dig up the tree";
 			case CELASTRUS:
 				return "Harvest the bark, then clear the tree";
+			case CORAL:
+				return "Collect the " + crop;
 			case BUSH:
 				return "Pick the berries";
 			case CACTUS:
@@ -446,6 +452,12 @@ public final class Planner
 			default:
 				return "Harvest the " + crop;
 		}
+	}
+
+	/** Whether planting it takes a seed dibber: not saplings, and not coral frags, which are placed by hand. */
+	public static boolean needsDibber(Produce p)
+	{
+		return !isSapling(p) && p.getKind() != PatchKind.CORAL;
 	}
 
 	/** Whether a crop goes in as a sapling (planted with a spade) rather than a seed (with a dibber). */
@@ -476,6 +488,8 @@ public final class Planner
 				return "a mushroom spore";
 			case HESPORI:
 				return "a Hespori seed";
+			case CORAL:
+				return article(p.getName().replace(" coral", "")) + " frag";
 			case BUSH:
 				return article(p.getName()) + " bush seed";
 			default:

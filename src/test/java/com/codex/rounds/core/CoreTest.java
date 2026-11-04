@@ -562,6 +562,92 @@ public class CoreTest
 	}
 
 	@Test
+	public void coralReadsLikeTimeTracking()
+	{
+		// Values from RuneLite's Time Tracking (PatchImplementation.CORAL): 0-3 empty nursery, then per coral
+		// four growing, one to collect, three diseased and three dead.
+		assertEquals(Action.PLANT, Growth.read(Spot.CORAL_EAST, new Seen(0, T0), T0, Growth.Offset.NONE).getAction());
+		assertEquals(Produce.ELKHORN_CORAL, PatchKind.CORAL.forVarbitValue(4).getProduce());
+		assertEquals(Action.HARVEST, PatchKind.CORAL.forVarbitValue(8).getAction());
+		assertEquals(Action.PRUNE, PatchKind.CORAL.forVarbitValue(20).getAction());
+		assertEquals(Produce.PILLAR_CORAL, PatchKind.CORAL.forVarbitValue(20).getProduce());
+		assertEquals(Action.CLEAR, PatchKind.CORAL.forVarbitValue(36).getAction());
+		assertEquals(Produce.UMBRAL_CORAL, PatchKind.CORAL.forVarbitValue(30).getProduce());
+		assertNull(PatchKind.CORAL.forVarbitValue(37));
+		// Four 40 minute stages (OSRS Wiki, Coral farming).
+		assertEquals(160, Produce.UMBRAL_CORAL.growMinutes());
+		Reading planted = Growth.read(Spot.CORAL_WEST, new Seen(26, T0), T0, Growth.Offset.NONE);
+		assertEquals(Status.GROWING, planted.getStatus());
+		assertEquals(T0 + 160 * 60, planted.getReadyAt(), 40 * 60);
+		Reading later = Growth.read(Spot.CORAL_WEST, new Seen(26, T0), T0 + 161 * 60 + 2400, Growth.Offset.NONE);
+		assertEquals(Status.READY, later.getStatus());
+		assertEquals(Action.HARVEST, later.getAction());
+	}
+
+	@Test
+	public void coralWaitsForTroubledTortugans()
+	{
+		Settings s = onlyFossil().includeUnseen(true);
+		for (Spot.Group g : Spot.Group.values())
+		{
+			s.group(g, g == Spot.Group.CORAL);
+		}
+		Ability before = Ability.builder().levels(99, 99, 99, 99).bankKnown(true).unlocks(EnumSet.of(Unlock.GREAT_CONCH)).build();
+		Board b = Board.build(new EnumMap<>(Spot.class), Collections.emptyList(), null, s, before, T0, Growth.Offset.NONE);
+		assertEquals(2, b.count(Status.LOCKED));
+		assertEquals(0, Planner.plan(b, Collections.emptyList(), s, before, Point.of(3164, 3486), T0).getStops().size());
+	}
+
+	@Test
+	public void coralRoundDivesBelowTheConchWithFragsAndPayment()
+	{
+		Settings s = onlyFossil().protect(true);
+		for (Spot.Group g : Spot.Group.values())
+		{
+			s.group(g, g == Spot.Group.CORAL);
+		}
+		Ability a = Ability.builder().levels(80, 99, 99, 99).bankKnown(true).ironman(true).fairyRings(true)
+			.unlocks(EnumSet.of(Unlock.GREAT_CONCH, Unlock.TROUBLED_TORTUGANS))
+			.item(ItemID.CORAL_PILLAR_FRAG, 2).item(ItemID.CORAL_ELKHORN, 20).item(ItemID.MEDALLION_OF_THE_DEEP, 1).build();
+		Map<Spot, Seen> seen = new EnumMap<>(Spot.class);
+		seen.put(Spot.CORAL_EAST, new Seen(8, T0 - 3600));
+		seen.put(Spot.CORAL_WEST, new Seen(8, T0 - 3600));
+		Board b = Board.build(seen, Collections.emptyList(), null, s, a, T0, Growth.Offset.NONE);
+		assertEquals(2, b.count(Status.READY));
+		Route route = Planner.plan(b, Collections.emptyList(), s, a, Point.of(3164, 3486), T0);
+		assertEquals(1, route.getStops().size());
+		Stop stop = route.getStops().get(0);
+		assertEquals(Place.CORAL_NURSERY, stop.getPlace());
+		assertEquals(Place.CONCH_EAST_COAST, stop.getWay().getPlace());
+		Task t = stop.getTasks().get(0);
+		// An ironman with pillar frags but no umbral ones plants what they own; frags take no compost.
+		assertEquals(Produce.PILLAR_CORAL, t.getPlant());
+		assertFalse(t.isCompost());
+		assertTrue(t.isProtect());
+		assertEquals("Collect the elkhorn coral, then plant a pillar frag", t.getDetail());
+
+		Map<String, Integer> pulls = new HashMap<>();
+		for (Need n : route.getPulls())
+		{
+			pulls.put(n.getLabel(), n.getQuantity());
+		}
+		assertEquals(Integer.valueOf(2), pulls.get("Pillar frag"));
+		assertEquals(Integer.valueOf(10), pulls.get("Elkhorn coral"));
+		assertNotNull(pulls.get("Medallion of the deep (worn)"));
+		assertNull(pulls.get("Fishbowl helmet (worn)"));
+		assertNull(pulls.get("Seed dibber"));
+		assertNull(pulls.get("Flippers"));
+		assertTrue(Leprechaun.PLACES.contains(Place.CORAL_NURSERY));
+
+		// On the eastern coast, the next step is the steps down, outlined by their object.
+		Guide.World w = new Guide.World(Point.of(3262, 2460), new EnumMap<>(Spot.class), new EnumMap<>(Daily.class), null,
+			new HashMap<>(), a, T0);
+		Step down = Guide.travel(stop, Place.CORAL_NURSERY, w, 0, 0, 2);
+		assertEquals("Go down the steps at the end of the dock", down.getTitle());
+		assertTrue(down.getTarget().matches(net.runelite.api.gameval.ObjectID.CONCH_FARMING_ENTRANCE));
+	}
+
+	@Test
 	public void auditedFarmingData()
 	{
 		assertEquals(76, Produce.IASOR.getLevel());

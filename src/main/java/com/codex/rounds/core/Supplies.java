@@ -64,6 +64,19 @@ public final class Supplies
 			{
 				add(lines, new Need(Need.Kind.TELEPORT, "Runes: " + way.getLeg().getLabel(), 1, stop.getPlace().getLabel(), true, ItemID.LAWRUNE), true);
 			}
+			if (stop.getPlace() == Place.CORAL_NURSERY)
+			{
+				// The nurseries take a worn medallion of the deep, or the helmet and apparatus; flippers do nothing there.
+				if (ability.owns(ItemID.MEDALLION_OF_THE_DEEP))
+				{
+					add(lines, new Need(Need.Kind.TOOL, "Medallion of the deep (worn)", 1, "diving", false, ItemID.MEDALLION_OF_THE_DEEP), false);
+				}
+				else
+				{
+					add(lines, new Need(Need.Kind.TOOL, "Fishbowl helmet (worn)", 1, "diving", false, ItemID.HUNDRED_PIRATE_DIVING_HELMET), false);
+					add(lines, new Need(Need.Kind.TOOL, "Diving apparatus (worn)", 1, "diving", false, ItemID.HUNDRED_PIRATE_DIVING_BACKPACK), false);
+				}
+			}
 			if (stop.getPlace() == Place.UNDERWATER)
 			{
 				add(lines, new Need(Need.Kind.TOOL, "Fishbowl helmet (worn)", 1, "diving", false, ItemID.HUNDRED_PIRATE_DIVING_HELMET), false);
@@ -142,7 +155,7 @@ public final class Supplies
 						Produce plant = t.getPlant();
 						if (plant != null)
 						{
-							dibber |= !Planner.isSapling(plant);
+							dibber |= Planner.needsDibber(plant);
 							add(lines, new Need(Need.Kind.PLANT, Planner.capitalise(Planner.seedName(plant).replaceFirst("^an? ", "")), 1,
 								spot.getLabel(), r.getStatus() == Status.UNSEEN, plant.getSeedId()), true);
 							if (t.isCompost())
@@ -344,6 +357,12 @@ public final class Supplies
 		{
 			case ItemID.CABBAGE:
 				return "Cabbages";
+			case ItemID.GIANT_SEAWEED:
+				return "Giant seaweed";
+			case ItemID.CORAL_ELKHORN:
+				return "Elkhorn coral";
+			case ItemID.CORAL_PILLAR:
+				return "Pillar coral";
 			case ItemID.TOMATO:
 				return "Tomatoes";
 			case ItemID.STRAWBERRY:
