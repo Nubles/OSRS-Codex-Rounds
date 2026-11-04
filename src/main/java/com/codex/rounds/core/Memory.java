@@ -37,6 +37,9 @@ public final class Memory
 	/** Tears of Guthix visits as Rounds saw them; null in saves from before it was tracked. */
 	public Tears.Record tears;
 
+	/** Sulliuscep runs on Fossil Island; null in saves from before they were tracked. */
+	public Sulliuscep.Memo sulliuscep;
+
 	/** Daily name to what was last seen of it. */
 	public Map<String, DailySnap> dailies = new HashMap<>();
 
@@ -185,6 +188,28 @@ public final class Memory
 			out.add(reset ? st.afterReset() : st);
 		}
 		return out;
+	}
+
+	/** The sulliuscep record, made on first use. */
+	public Sulliuscep.Memo sulliuscep()
+	{
+		if (sulliuscep == null)
+		{
+			sulliuscep = new Sulliuscep.Memo();
+		}
+		if (sulliuscep.runs == null)
+		{
+			sulliuscep.runs = new ArrayList<>();
+		}
+		if (sulliuscep.after == null)
+		{
+			sulliuscep.after = new HashMap<>();
+		}
+		if (sulliuscep.where == null)
+		{
+			sulliuscep.where = new HashMap<>();
+		}
+		return sulliuscep;
 	}
 
 	/** The Tears of Guthix record, made on first use. */
