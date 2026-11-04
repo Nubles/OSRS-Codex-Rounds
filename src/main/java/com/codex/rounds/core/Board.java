@@ -282,12 +282,17 @@ public final class Board
 				s = Status.READY;
 				detail = d.getReward();
 			}
+			else if (d.isUnseen())
+			{
+				s = Status.UNSEEN;
+				detail = d.getWaiting();
+			}
 			else
 			{
 				s = Status.DONE;
-				detail = "Claimed today";
+				detail = d.getWaiting() != null ? d.getWaiting() : "Claimed today";
 			}
-			long reset = (now / 86400 + 1) * 86400;
+			long reset = d.getReadyAt() > 0 ? d.getReadyAt() : d.getDaily().resetsDaily() ? (now / 86400 + 1) * 86400 : 0;
 			list.add(new Entry(Type.DAILY, null, d.getDaily(), s, d.getDaily().getLabel(), detail, s == Status.DONE ? reset : 0, d.getDaily().getItemId(), null));
 		}
 
@@ -337,6 +342,8 @@ public final class Board
 				return "Needs the easy Wilderness diary";
 			case CONTRACT:
 				return "Talk to Guildmaster Jane in the Farming Guild (45 Farming)";
+			case TEARS:
+				return "Needs the Tears of Guthix quest";
 			default:
 				return "Locked";
 		}

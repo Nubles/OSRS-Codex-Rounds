@@ -43,7 +43,7 @@ public final class Planner
 					}
 					break;
 				case DAILY:
-					if (e.getStatus() == Status.READY && settings.wants(e.getDaily()))
+					if ((e.getStatus() == Status.READY || e.getStatus() == Status.UNSEEN && settings.isIncludeUnseen()) && settings.wants(e.getDaily()))
 					{
 						DailyState ds = dailyStates.get(e.getDaily());
 						t = new Task(Board.Type.DAILY, null, e.getDaily(), null, null, false, false,

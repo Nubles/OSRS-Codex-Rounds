@@ -191,7 +191,7 @@ public interface CodexRoundsConfig extends Config
 	@ConfigSection(name = "Chores", description = "What goes on the round", position = 1)
 	String CHORES = "chores";
 
-	@ConfigSection(name = "Dailies", description = "Daily buys and claims to pick up on the way", position = 2)
+	@ConfigSection(name = "Dailies", description = "Daily buys and claims, and the weekly Tears of Guthix, to pick up on the way", position = 2)
 	String DAILIES = "dailies";
 
 	@ConfigSection(name = "Planting", description = "What to plant and how to look after it", position = 3)
@@ -526,6 +526,18 @@ public interface CodexRoundsConfig extends Config
 		position = 9
 	)
 	default boolean contract()
+	{
+		return true;
+	}
+
+	@ConfigItem(
+		keyName = "tears",
+		name = "Tears of Guthix",
+		description = "Visit Juna once a week for Tears of Guthix: Rounds says which skill the tears would train and when she lets you back in",
+		section = DAILIES,
+		position = 10
+	)
+	default boolean tears()
 	{
 		return true;
 	}

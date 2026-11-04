@@ -23,12 +23,13 @@ import com.codex.rounds.core.Settings;
 import com.codex.rounds.core.Spot;
 import com.codex.rounds.core.Status;
 import com.codex.rounds.core.Step;
+import com.codex.rounds.core.Stop;
 import com.codex.rounds.core.Supplies;
+import com.codex.rounds.core.Task;
+import com.codex.rounds.core.Tears;
+import com.codex.rounds.core.Teleports;
 import com.codex.rounds.core.TravelTimer;
 import com.codex.rounds.core.Unlock;
-import com.codex.rounds.core.Stop;
-import com.codex.rounds.core.Task;
-import com.codex.rounds.core.Teleports;
 import com.codex.rounds.core.Vars;
 import com.codex.rounds.core.farming.CropState;
 import com.codex.rounds.core.farming.PatchState;
@@ -131,8 +132,12 @@ public class CodexRoundsPlugin extends Plugin
 	private static final int SAVE_TICKS = 50;
 	private static final int ACCOUNT_TICKS = 5;
 	private static final int QUEST_TICKS = 100;
+	/** A visit to the tears lasts well under this; a countdown seen again after it is a new week's visit. */
+	private static final int TEARS_VISIT_SECONDS = 600;
 	private static final int PUBLISH_TICKS = 10;
 	private static final int SCAN_RADIUS = 10;
+	/** Juna sits further from the games necklace landing than a patch from its spot. */
+	private static final int OBJECT_SCAN_RADIUS = 24;
 	/** Quetzal landing sites built, as bits of the quetzals varp (from the Shortest Path plugin's data). */
 	private static final int QUETZAL_KASTORI_BIT = 16384;
 	private static final int QUETZAL_WYRM_BIT = 64;
@@ -223,6 +228,8 @@ public class CodexRoundsPlugin extends Plugin
 	/** A running round keeps its route; only starting it or pressing Replan plans it again. */
 	private boolean roundReplan;
 	private int ticks;
+	/** Juna's last line read, so each is heard once. */
+	private String lastJuna;
 	private String published;
 	private boolean notified;
 	private WorldMapPoint mapPoint;
@@ -475,6 +482,12 @@ public class CodexRoundsPlugin extends Plugin
 			return;
 		}
 		String msg = event.getMessage();
+		if (memory != null && msg.contains("quest point") && Tears.hear(memory.tears(), msg, Instant.now().getEpochSecond()))
+		{
+			noteTears("message");
+			dirty = true;
+			unsaved = true;
+		}
 		if (msg.contains("compost") && COMPOST.matcher(msg).matches())
 		{
 			Spot spot = spotBeside();
@@ -508,6 +521,7 @@ public class CodexRoundsPlugin extends Plugin
 			readAccount(now, ticks % QUEST_TICKS == 0);
 		}
 		readPayment();
+		readJuna(now);
 		ticks++;
 
 		refresh(false);
@@ -657,6 +671,10 @@ public class CodexRoundsPlugin extends Plugin
 
 		for (Daily d : Daily.values())
 		{
+			if (d.isRemembered())
+			{
+				continue;
+			}
 			DailyState st = DailyState.of(d, vars);
 			Memory.DailySnap old = memory.dailies == null ? null : memory.dailies.get(d.name());
 			if (old == null || old.claimable != st.isClaimable() || old.unlocked != st.isUnlocked() || now / 86400 != old.seenAt / 86400
@@ -719,6 +737,110 @@ public class CodexRoundsPlugin extends Plugin
 				dirty = true;
 				unsaved = true;
 			}
+			readTearsSkill();
+		}
+		readTears(now);
+	}
+
+	/** Quest points, total experience and whether Juna is open to the player at all. */
+	private void readTears(long now)
+	{
+		Tears.Record t = memory.tears();
+		int qp = client.getVarpValue(VarPlayerID.QP);
+		long xp = client.getOverallExperience();
+		if (qp != t.qp || xp != t.xp)
+		{
+			t.qp = qp;
+			t.xp = xp;
+			dirty = true;
+			unsaved = true;
+		}
+		Player me = client.getLocalPlayer();
+		boolean inChasm = me != null && me.getWorldLocation().getRegionID() == Tears.REGION;
+		// The minigame's tick countdown runs only while the player is collecting (Improved Tears of Guthix Interface reads the same varbit).
+		if (inChasm && client.getVarbitValue(VarbitID.TOG_COUNTDOWN) > 0
+			&& (t.playedAt == null || now - t.playedAt > TEARS_VISIT_SECONDS))
+		{
+			Tears.played(t, now);
+			noteTears("played");
+			dirty = true;
+			unsaved = true;
+		}
+		else if (inChasm && t.playedAt != null && now - t.playedAt <= TEARS_VISIT_SECONDS && t.xpAtPlay != null && xp != t.xpAtPlay)
+		{
+			// The tears are drunk as time runs out; count gains from after the drink.
+			t.xpAtPlay = xp;
+			t.qpAtPlay = qp;
+			unsaved = true;
+		}
+	}
+
+	/** Which skill the tears would go to, and whether the Tears of Guthix quest is done. */
+	private void readTearsSkill()
+	{
+		Tears.Record t = memory.tears();
+		boolean quest = finished(Quest.TEARS_OF_GUTHIX);
+		Map<Skill, Integer> xp = new EnumMap<>(Skill.class);
+		for (Skill sk : Skill.values())
+		{
+			xp.put(sk, client.getSkillExperience(sk));
+		}
+		// POH_HOUSE_LOCATION is 0 until a house is bought (gameval name; the wiki's rule is "owning a house").
+		Skill low = Tears.lowest(xp, finished(Quest.RUNE_MYSTERIES), finished(Quest.DRUIDIC_RITUAL),
+			client.getVarbitValue(VarbitID.POH_HOUSE_LOCATION) > 0, finished(Quest.PANDEMONIUM));
+		String name = low == null ? null : low.getName();
+		int level = low == null ? 0 : client.getRealSkillLevel(low);
+		boolean bonus = client.getVarbitValue(VarbitID.LUMBRIDGE_DIARY_HARD_COMPLETE) == 1;
+		if (quest != t.quest || !java.util.Objects.equals(name, t.skill) || level != t.skillLevel || bonus != t.diaryBonus)
+		{
+			t.quest = quest;
+			t.skill = name;
+			t.skillLevel = level;
+			t.diaryBonus = bonus;
+			dirty = true;
+			unsaved = true;
+		}
+	}
+
+	/** Writes what Rounds now believes about Tears of Guthix to the field notes, when they are on. */
+	private void noteTears(String why)
+	{
+		if (!notes.isOpen())
+		{
+			return;
+		}
+		Tears.Record t = memory.tears();
+		JsonObject n = new JsonObject();
+		n.addProperty("why", why);
+		n.addProperty("playedAt", t.playedAt);
+		n.addProperty("opensAt", t.opensAt);
+		n.addProperty("qpAtPlay", t.qpAtPlay);
+		n.addProperty("xpAtPlay", t.xpAtPlay);
+		n.addProperty("xpDue", t.xpDue);
+		n.addProperty("qp", t.qp);
+		n.addProperty("xp", t.xp);
+		notes.note("tears", n);
+	}
+
+	/** Listens to Juna while the player is in the chasm: she says when to come back. */
+	private void readJuna(long now)
+	{
+		Player me = client.getLocalPlayer();
+		if (me == null || me.getWorldLocation().getRegionID() != Tears.REGION)
+		{
+			return;
+		}
+		Widget text = client.getWidget(InterfaceID.ChatLeft.TEXT);
+		if (text == null || text.isHidden() || text.getText() == null || text.getText().equals(lastJuna))
+		{
+			return;
+		}
+		lastJuna = text.getText();
+		if (Tears.hear(memory.tears(), lastJuna, now))
+		{
+			noteTears("juna");
+			dirty = true;
+			unsaved = true;
 		}
 	}
 
@@ -863,7 +985,7 @@ public class CodexRoundsPlugin extends Plugin
 			List<DailyState> out = new ArrayList<>();
 			for (Daily d : Daily.values())
 			{
-				out.add(DailyState.of(d, vars));
+				out.add(d.isRemembered() ? Tears.state(memory.tears(), now) : DailyState.of(d, vars));
 			}
 			return out;
 		}
@@ -1173,9 +1295,10 @@ public class CodexRoundsPlugin extends Plugin
 		Spot spot = target.getSpot();
 		int sx = lp.getSceneX();
 		int sy = lp.getSceneY();
-		for (int x = Math.max(0, sx - SCAN_RADIUS); x <= Math.min(tiles[plane].length - 1, sx + SCAN_RADIUS); x++)
+		int r = spot != null ? SCAN_RADIUS : OBJECT_SCAN_RADIUS;
+		for (int x = Math.max(0, sx - r); x <= Math.min(tiles[plane].length - 1, sx + r); x++)
 		{
-			for (int y = Math.max(0, sy - SCAN_RADIUS); y <= Math.min(tiles[plane][x].length - 1, sy + SCAN_RADIUS); y++)
+			for (int y = Math.max(0, sy - r); y <= Math.min(tiles[plane][x].length - 1, sy + r); y++)
 			{
 				Tile tile = tiles[plane][x][y];
 				if (tile == null)
@@ -1421,6 +1544,7 @@ public class CodexRoundsPlugin extends Plugin
 			.daily(Daily.HERB_BOXES, config.herbBoxes())
 			.daily(Daily.LUNDAIL, config.lundail())
 			.daily(Daily.CONTRACT, config.contract())
+			.daily(Daily.TEARS, config.tears())
 			.kingdom(config.kingdom())
 			.kingdomTargets(config.approvalTarget(), config.cofferTarget(), config.topUpSlack())
 			.compost(config.compost())

@@ -4,6 +4,8 @@ package com.codex.rounds.core;
 public final class Teleports
 {
 	static final int[] DIGSITE_PENDANT = {11190, 11191, 11192, 11193, 11194};
+	/** Games necklace (8) down to (1). */
+	static final int[] GAMES_NECKLACE = {3853, 3855, 3857, 3859, 3861, 3863, 3865, 3867};
 	static final int[] SKILLS_NECKLACE = {11105, 11107, 11109, 11111, 11968, 11970};
 	static final int[] FARMING_CAPE = {9810, 9811};
 	static final int[] MAX_CAPE = {13280, 13342};
