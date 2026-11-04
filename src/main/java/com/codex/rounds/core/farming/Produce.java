@@ -104,7 +104,7 @@ public enum Produce
 	IRIT("Irit", PatchKind.HERB, ItemID.IRIT_LEAF, 20, 5, 0, 3, ItemID.IRIT_SEED, 44),
 	AVANTOE("Avantoe", PatchKind.HERB, ItemID.AVANTOE, 20, 5, 0, 3, ItemID.AVANTOE_SEED, 50),
 	KWUARM("Kwuarm", PatchKind.HERB, ItemID.KWUARM, 20, 5, 0, 3, ItemID.KWUARM_SEED, 56),
-	HUASCA("Huasca", PatchKind.HERB, ItemID.HUASCA, 20, 5, 0, 3, ItemID.HUASCA_SEED, 58),
+	HUASCA("Huasca", PatchKind.HERB, ItemID.HUASCA, 20, 5, 0, 3, ItemID.HUASCA_SEED, 65),
 	SNAPDRAGON("Snapdragon", PatchKind.HERB, ItemID.SNAPDRAGON, 20, 5, 0, 3, ItemID.SNAPDRAGON_SEED, 62),
 	CADANTINE("Cadantine", PatchKind.HERB, ItemID.CADANTINE, 20, 5, 0, 3, ItemID.CADANTINE_SEED, 67),
 	LANTADYME("Lantadyme", PatchKind.HERB, ItemID.LANTADYME, 20, 5, 0, 3, ItemID.LANTADYME_SEED, 73),
