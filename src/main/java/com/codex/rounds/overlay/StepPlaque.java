@@ -56,7 +56,21 @@ public class StepPlaque extends Overlay
 	}
 
 	@Override
-	public Dimension render(Graphics2D g)
+	public Dimension render(Graphics2D graphics)
+	{
+		// Draw on a copy, so no clip, stroke, font or hint leaks back into RuneLite's overlay renderer.
+		Graphics2D g = (Graphics2D) graphics.create();
+		try
+		{
+			return draw(g);
+		}
+		finally
+		{
+			g.dispose();
+		}
+	}
+
+	private Dimension draw(Graphics2D g)
 	{
 		Shown s = shown;
 		if (s == null)
